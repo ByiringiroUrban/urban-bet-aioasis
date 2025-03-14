@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -11,14 +11,49 @@ import {
   Activity, 
   Zap, 
   Search, 
-  Bell
+  Bell,
+  LogOut
 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Navbar() {
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userBalance, setUserBalance] = useState("$0.00");
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userToken = localStorage.getItem("userToken");
+    if (userToken) {
+      setIsLoggedIn(true);
+      setUserName(localStorage.getItem("userName") || "User");
+      // In a real app, this would fetch the user's balance from an API
+      setUserBalance("$1,250.00");
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleLogout = () => {
+    // Clear user data
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+    
+    setIsLoggedIn(false);
+    
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account.",
+    });
+    
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
@@ -84,11 +119,28 @@ export default function Navbar() {
                   <Bell size={20} />
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-bet-primary rounded-full text-xs flex items-center justify-center">3</span>
                 </button>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium">$1,250.00</span>
-                  <Avatar className="h-8 w-8 hover-scale">
-                    <AvatarFallback className="bg-bet-accent">JD</AvatarFallback>
-                  </Avatar>
+                <div className="relative group">
+                  <div className="flex items-center space-x-2 cursor-pointer">
+                    <span className="text-sm font-medium">{userBalance}</span>
+                    <Avatar className="h-8 w-8 hover-scale">
+                      <AvatarFallback className="bg-bet-accent">
+                        {userName.split(' ').map(name => name[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg glass hidden group-hover:block transition-all">
+                    <div className="py-1">
+                      <Link to="/dashboard" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Dashboard</Link>
+                      <Link to="/account" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Account Settings</Link>
+                      <Link to="/wallet" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Wallet</Link>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center"
+                      >
+                        <LogOut size={14} className="mr-2" /> Sign Out
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
@@ -130,22 +182,39 @@ export default function Navbar() {
             
             <div className="pt-4 space-y-2">
               {isLoggedIn ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-bet-accent">JD</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">$1,250.00</span>
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-bet-accent">
+                          {userName.split(' ').map(name => name[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{userBalance}</span>
+                    </div>
                   </div>
-                  <Button variant="outline" size="sm">My Account</Button>
-                </div>
+                  <Link to="/dashboard" onClick={toggleMenu}>
+                    <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-red-500 hover:text-red-600"
+                    onClick={() => {
+                      handleLogout();
+                      toggleMenu();
+                    }}
+                  >
+                    <LogOut size={14} className="mr-2" /> Sign Out
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link to="/login">Log In</Link>
+                    <Link to="/login" onClick={toggleMenu}>Log In</Link>
                   </Button>
                   <Button className="w-full bg-bet-primary hover:bg-bet-primary/90" asChild>
-                    <Link to="/register">Sign Up</Link>
+                    <Link to="/register" onClick={toggleMenu}>Sign Up</Link>
                   </Button>
                 </>
               )}

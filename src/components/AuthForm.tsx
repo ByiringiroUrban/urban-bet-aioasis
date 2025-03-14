@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
@@ -14,8 +14,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
-export default function AuthForm() {
+export default function AuthForm({ defaultTab = "login" }) {
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -23,24 +26,80 @@ export default function AuthForm() {
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt with:", { loginEmail, loginPassword });
-    // This would be implemented with actual authentication in a real app
+    setIsSubmitting(true);
+    
+    try {
+      // This would be replaced with actual authentication API call
+      console.log("Login attempt with:", { loginEmail, loginPassword });
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful login
+      localStorage.setItem("userToken", "sample-jwt-token");
+      localStorage.setItem("userEmail", loginEmail);
+      
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to Urban Bet.",
+      });
+      
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Register attempt with:", { registerName, registerEmail, registerPassword, agreeTerms });
-    // This would be implemented with actual registration in a real app
+    setIsSubmitting(true);
+    
+    try {
+      // This would be replaced with actual registration API call
+      console.log("Register attempt with:", { registerName, registerEmail, registerPassword, agreeTerms });
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful registration
+      localStorage.setItem("userToken", "sample-jwt-token");
+      localStorage.setItem("userName", registerName);
+      localStorage.setItem("userEmail", registerEmail);
+      
+      toast({
+        title: "Registration successful!",
+        description: "Welcome to Urban Bet. Your account has been created.",
+      });
+      
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: "Please check your information and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
   return (
     <Card className="w-full max-w-md mx-auto card-highlight bg-card border-border/50">
-      <Tabs defaultValue="login">
+      <Tabs defaultValue={defaultTab}>
         <CardHeader>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
@@ -102,8 +161,13 @@ export default function AuthForm() {
                   </Link>
                 </div>
                 
-                <Button type="submit" className="w-full bg-bet-primary hover:bg-bet-primary/90">
-                  Log In <ArrowRight size={16} className="ml-1" />
+                <Button 
+                  type="submit" 
+                  className="w-full bg-bet-primary hover:bg-bet-primary/90"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Logging in..." : "Log In"} 
+                  {!isSubmitting && <ArrowRight size={16} className="ml-1" />}
                 </Button>
               </div>
             </form>
@@ -185,9 +249,10 @@ export default function AuthForm() {
                 <Button 
                   type="submit" 
                   className="w-full bg-bet-primary hover:bg-bet-primary/90"
-                  disabled={!agreeTerms}
+                  disabled={!agreeTerms || isSubmitting}
                 >
-                  Create Account <ArrowRight size={16} className="ml-1" />
+                  {isSubmitting ? "Creating Account..." : "Create Account"} 
+                  {!isSubmitting && <ArrowRight size={16} className="ml-1" />}
                 </Button>
               </div>
             </form>
