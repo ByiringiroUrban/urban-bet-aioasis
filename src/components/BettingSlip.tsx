@@ -36,8 +36,8 @@ export default function BettingSlip() {
 
   const toggleOpen = () => setIsOpen(!isOpen);
 
-  const calculateTotalOdds = () => {
-    if (betItems.length === 0) return 0;
+  const calculateTotalOdds = (): string => {
+    if (betItems.length === 0) return "0";
     return betItems.reduce((acc, bet) => acc * bet.odds, 1).toFixed(2);
   };
 
