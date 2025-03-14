@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -15,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { socialLogin } from "@/utils/authUtils";
 
 export default function AuthForm({ defaultTab = "login" }) {
   const { toast } = useToast();
@@ -27,19 +27,17 @@ export default function AuthForm({ defaultTab = "login" }) {
   const [registerPassword, setRegisterPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      // This would be replaced with actual authentication API call
       console.log("Login attempt with:", { loginEmail, loginPassword });
       
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful login
       localStorage.setItem("userToken", "sample-jwt-token");
       localStorage.setItem("userEmail", loginEmail);
       
@@ -48,7 +46,6 @@ export default function AuthForm({ defaultTab = "login" }) {
         description: "Welcome back to Urban Bet.",
       });
       
-      // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
       toast({
@@ -66,13 +63,10 @@ export default function AuthForm({ defaultTab = "login" }) {
     setIsSubmitting(true);
     
     try {
-      // This would be replaced with actual registration API call
       console.log("Register attempt with:", { registerName, registerEmail, registerPassword, agreeTerms });
       
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful registration
       localStorage.setItem("userToken", "sample-jwt-token");
       localStorage.setItem("userName", registerName);
       localStorage.setItem("userEmail", registerEmail);
@@ -82,7 +76,6 @@ export default function AuthForm({ defaultTab = "login" }) {
         description: "Welcome to Urban Bet. Your account has been created.",
       });
       
-      // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
       toast({
@@ -92,6 +85,29 @@ export default function AuthForm({ defaultTab = "login" }) {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+    try {
+      setSocialLoading(provider);
+      
+      await socialLogin(provider);
+      
+      toast({
+        title: "Login successful!",
+        description: `You've successfully logged in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}.`,
+      });
+      
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: `There was a problem logging in with ${provider}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -261,12 +277,36 @@ export default function AuthForm({ defaultTab = "login" }) {
       </Tabs>
       
       <CardFooter className="flex justify-center border-t border-border pt-4">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 w-full">
           <div className="text-xs text-muted-foreground">Or continue with</div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1">Google</Button>
-            <Button variant="outline" size="sm" className="flex-1">Facebook</Button>
-            <Button variant="outline" size="sm" className="flex-1">Apple</Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => handleSocialLogin('google')}
+              disabled={socialLoading !== null}
+            >
+              {socialLoading === 'google' ? 'Loading...' : 'Google'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={socialLoading !== null}
+            >
+              {socialLoading === 'facebook' ? 'Loading...' : 'Facebook'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => handleSocialLogin('apple')}
+              disabled={socialLoading !== null}
+            >
+              {socialLoading === 'apple' ? 'Loading...' : 'Apple'}
+            </Button>
           </div>
         </div>
       </CardFooter>

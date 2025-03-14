@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,17 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { isAuthenticated } from "@/utils/authUtils";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get user data from localStorage
+  const userEmail = localStorage.getItem("userEmail");
+  const userName = localStorage.getItem("userName");
+  const userProvider = localStorage.getItem("userProvider");
   
   // Check if user is authenticated
   useEffect(() => {
-    // This is a mock implementation - would be replaced with actual auth check
-    const userToken = localStorage.getItem("userToken");
-    if (!userToken) {
+    if (!isAuthenticated()) {
       toast({
         title: "Authentication required",
         description: "Please login to access your dashboard.",
@@ -27,7 +31,7 @@ const Dashboard = () => {
       return;
     }
     
-    setIsAuthenticated(true);
+    setIsLoading(false);
     toast({
       title: "Welcome back!",
       description: "You've successfully logged into your dashboard.",
@@ -36,14 +40,16 @@ const Dashboard = () => {
 
   // Mock user data
   const userData = {
-    name: "John Doe",
+    name: userName || "User",
+    email: userEmail || "user@example.com",
+    provider: userProvider ? `${userProvider.charAt(0).toUpperCase() + userProvider.slice(1)}` : "Email",
     balance: "$1,250.00",
     activeBets: 3,
     wonBets: 12,
     totalBets: 20
   };
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return null; // Don't render anything while redirecting
   }
 
@@ -58,7 +64,14 @@ const Dashboard = () => {
               <Card className="bg-card">
                 <CardHeader>
                   <CardTitle>Account Overview</CardTitle>
-                  <CardDescription>Welcome back, {userData.name}</CardDescription>
+                  <CardDescription>
+                    Welcome back, {userData.name}
+                    {userData.provider && (
+                      <span className="block text-xs mt-1">
+                        Logged in with {userData.provider}
+                      </span>
+                    )}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
