@@ -15,6 +15,22 @@ import {
   LogOut
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const { toast } = useToast();
@@ -69,34 +85,40 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link to="/" className="text-foreground hover:text-bet-primary transition-colors font-medium">
-              Home
-            </Link>
-            <div className="relative group">
-              <button className="flex items-center text-foreground hover:text-bet-primary transition-colors font-medium">
-                Sports <ChevronDown size={16} className="ml-1" />
-              </button>
-              <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg glass hidden group-hover:block transition-all">
-                <div className="py-1">
-                  <Link to="/sports/football" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Football</Link>
-                  <Link to="/sports/basketball" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Basketball</Link>
-                  <Link to="/sports/tennis" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Tennis</Link>
-                  <Link to="/sports/esports" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Esports</Link>
-                </div>
-              </div>
-            </div>
-            <Link to="/casino" className="text-foreground hover:text-bet-primary transition-colors font-medium">
-              Casino
-            </Link>
-            <Link to="/live" className="text-foreground hover:text-bet-primary transition-colors font-medium">
-              Live Betting
-            </Link>
-            <Link to="/ai-predictions" className="text-foreground hover:text-bet-primary transition-colors font-medium">
-              AI Predictions
-            </Link>
-          </nav>
+          {/* Desktop Navigation - Using NavigationMenu from shadcn */}
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/" className="text-foreground hover:text-bet-primary transition-colors font-medium px-3 py-2">
+                  Home
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/sports/football" className="text-foreground hover:text-bet-primary transition-colors font-medium px-3 py-2">
+                  Sports
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/casino" className="text-foreground hover:text-bet-primary transition-colors font-medium px-3 py-2">
+                  Casino
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/live" className="text-foreground hover:text-bet-primary transition-colors font-medium px-3 py-2">
+                  Live Betting
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/ai-predictions" className="text-foreground hover:text-bet-primary transition-colors font-medium px-3 py-2">
+                  AI Predictions
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
 
           {/* Mobile Toggle */}
           <div className="md:hidden">
@@ -113,35 +135,46 @@ export default function Navbar() {
             <button className="text-foreground hover:text-bet-primary transition-colors">
               <Search size={20} />
             </button>
+            
             {isLoggedIn ? (
               <>
                 <button className="relative text-foreground hover:text-bet-primary transition-colors">
                   <Bell size={20} />
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-bet-primary rounded-full text-xs flex items-center justify-center">3</span>
                 </button>
-                <div className="relative group">
-                  <div className="flex items-center space-x-2 cursor-pointer">
-                    <span className="text-sm font-medium">{userBalance}</span>
-                    <Avatar className="h-8 w-8 hover-scale">
-                      <AvatarFallback className="bg-bet-accent">
-                        {userName.split(' ').map(name => name[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg glass hidden group-hover:block transition-all">
-                    <div className="py-1">
-                      <Link to="/dashboard" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Dashboard</Link>
-                      <Link to="/account" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Account Settings</Link>
-                      <Link to="/wallet" className="block px-4 py-2 text-sm hover:bg-bet-primary/10">Wallet</Link>
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center"
-                      >
-                        <LogOut size={14} className="mr-2" /> Sign Out
-                      </button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="focus:outline-none">
+                    <div className="flex items-center space-x-2 cursor-pointer">
+                      <span className="text-sm font-medium">{userBalance}</span>
+                      <Avatar className="h-8 w-8 hover-scale">
+                        <AvatarFallback className="bg-bet-accent">
+                          {userName.split(' ').map(name => name[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                  </div>
-                </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard">Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/account">Account Settings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/wallet">Wallet</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      className="text-red-500 focus:text-red-500"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={14} className="mr-2" /> Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
