@@ -9,6 +9,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AIPredictions from "./pages/AIPredictions";
+import Casino from "./pages/Casino";
+import Sports from "./pages/Sports";
+import LiveBetting from "./pages/LiveBetting";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +28,10 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ai-predictions" element={<AIPredictions />} />
+          <Route path="/casino" element={<Casino />} />
+          <Route path="/sports" element={<Sports />} />
+          <Route path="/sports/:sport" element={<Sports />} />
+          <Route path="/live" element={<LiveBetting />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
