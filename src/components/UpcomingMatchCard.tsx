@@ -3,6 +3,8 @@ import { Clock, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useBetting } from "@/contexts/BettingContext";
+import { cn } from "@/lib/utils";
 
 interface UpcomingMatchCardProps {
   homeTeam: string;
@@ -27,14 +29,47 @@ export default function UpcomingMatchCard({
   awayOdds,
   isLive = false
 }: UpcomingMatchCardProps) {
+  const { addBet } = useBetting();
+
   const addToBettingSlip = (selection: string, odds: number) => {
-    // This would be implemented with context/state management in a real app
-    console.log(`Added ${selection} at odds ${odds} to betting slip`);
+    addBet({
+      event: `${homeTeam} vs ${awayTeam}`,
+      selection,
+      odds
+    });
   };
 
+  const OddsButton = ({ 
+    label, 
+    odds, 
+    onClick, 
+    disabled = false 
+  }: { 
+    label: string; 
+    odds: number; 
+    onClick: () => void; 
+    disabled?: boolean 
+  }) => (
+    <Button 
+      variant="outline" 
+      className={cn(
+        "flex flex-col items-center py-3 transition-all duration-200 border-border",
+        disabled ? "opacity-50 cursor-not-allowed" : 
+        "hover:border-bet-primary hover:bg-bet-primary/5 hover:text-bet-primary active:scale-95"
+      )}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      <span className="text-xs text-muted-foreground mb-1">{label}</span>
+      <span className="font-bold text-lg bg-gradient-to-r from-bet-primary to-bet-accent bg-clip-text text-transparent">
+        {odds.toFixed(2)}
+      </span>
+    </Button>
+  );
+
   return (
-    <Card className="card-highlight transition-all duration-300 bg-card border-border/50 hover-scale">
-      <CardHeader className="pb-2">
+    <Card className="card-highlight transition-all duration-300 bg-card border-border/50 hover-scale overflow-hidden">
+      <CardHeader className="pb-2 relative">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg font-semibold">{homeTeam} vs {awayTeam}</CardTitle>
           {isLive && (
@@ -49,27 +84,24 @@ export default function UpcomingMatchCard({
           <Clock size={12} className="mr-1" />
           <span>{time}, {date}</span>
         </div>
+        {isLive && (
+          <div className="absolute -top-1 -right-1 w-24 h-24 bg-gradient-to-br from-bet-danger/30 to-transparent rounded-bl-full opacity-40 pointer-events-none" />
+        )}
       </CardHeader>
       <CardContent className="pb-2">
         <div className="grid grid-cols-3 gap-2">
-          <Button 
-            variant="outline" 
-            className="flex flex-col items-center py-3 hover:border-bet-primary hover:text-bet-primary transition-all"
+          <OddsButton
+            label="Home"
+            odds={homeOdds}
             onClick={() => addToBettingSlip(`${homeTeam} to win`, homeOdds)}
-          >
-            <span className="text-xs text-muted-foreground mb-1">Home</span>
-            <span className="font-bold">{homeOdds}</span>
-          </Button>
+          />
           
           {drawOdds ? (
-            <Button 
-              variant="outline" 
-              className="flex flex-col items-center py-3 hover:border-bet-primary hover:text-bet-primary transition-all"
+            <OddsButton
+              label="Draw"
+              odds={drawOdds}
               onClick={() => addToBettingSlip("Draw", drawOdds)}
-            >
-              <span className="text-xs text-muted-foreground mb-1">Draw</span>
-              <span className="font-bold">{drawOdds}</span>
-            </Button>
+            />
           ) : (
             <Button 
               variant="outline" 
@@ -81,19 +113,16 @@ export default function UpcomingMatchCard({
             </Button>
           )}
           
-          <Button 
-            variant="outline" 
-            className="flex flex-col items-center py-3 hover:border-bet-primary hover:text-bet-primary transition-all"
+          <OddsButton
+            label="Away"
+            odds={awayOdds}
             onClick={() => addToBettingSlip(`${awayTeam} to win`, awayOdds)}
-          >
-            <span className="text-xs text-muted-foreground mb-1">Away</span>
-            <span className="font-bold">{awayOdds}</span>
-          </Button>
+          />
         </div>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" size="sm" className="w-full text-xs">
-          More Markets <ArrowRight size={14} className="ml-1" />
+        <Button variant="outline" size="sm" className="w-full text-xs group">
+          More Markets <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
         </Button>
       </CardFooter>
     </Card>
