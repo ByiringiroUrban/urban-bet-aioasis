@@ -8,8 +8,30 @@ import Footer from "@/components/Footer";
 import UpcomingMatchCard from "@/components/UpcomingMatchCard";
 import { useParams, useNavigate } from "react-router-dom";
 
+// Define TypeScript interfaces for our data structure
+interface BaseMatch {
+  homeTeam: string;
+  awayTeam: string;
+  league: string;
+  time: string;
+  date: string;
+  homeOdds: number;
+  awayOdds: number;
+  isLive?: boolean;
+}
+
+// For sports that have draws (like football)
+interface MatchWithDraw extends BaseMatch {
+  drawOdds: number;
+}
+
+// Type guard to check if a match has drawOdds
+function hasDrawOdds(match: BaseMatch): match is MatchWithDraw {
+  return 'drawOdds' in match;
+}
+
 // Mock data for sports matches
-const sportsData = {
+const sportsData: Record<string, (BaseMatch | MatchWithDraw)[]> = {
   football: [
     {
       homeTeam: "Arsenal",
@@ -124,8 +146,8 @@ export default function Sports() {
     
     const matchesView = 
       matchesView === "all" || 
-      (matchesView === "live" && match.isLive) ||
-      (matchesView === "upcoming" && !match.isLive);
+      (matchesView === "live" && match.isLive === true) || 
+      (matchesView === "upcoming" && match.isLive !== true);
     
     return matchesSearch && matchesView;
   });
@@ -203,7 +225,7 @@ export default function Sports() {
                     time={match.time}
                     date={match.date}
                     homeOdds={match.homeOdds}
-                    drawOdds={match.drawOdds}
+                    drawOdds={hasDrawOdds(match) ? match.drawOdds : undefined}
                     awayOdds={match.awayOdds}
                     isLive={match.isLive}
                   />
