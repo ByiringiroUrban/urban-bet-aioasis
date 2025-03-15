@@ -144,12 +144,12 @@ export default function Sports() {
       match.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.league.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesView = 
+    const matchesViewFilter = 
       matchesView === "all" || 
       (matchesView === "live" && match.isLive === true) || 
       (matchesView === "upcoming" && match.isLive !== true);
     
-    return matchesSearch && matchesView;
+    return matchesSearch && matchesViewFilter;
   });
 
   const handleSportChange = (newSport: string) => {
