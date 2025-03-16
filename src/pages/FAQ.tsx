@@ -1,6 +1,6 @@
-
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("general");
   
-  // FAQ data by category
   const faqs = {
     general: [
       {

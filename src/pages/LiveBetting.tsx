@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +10,11 @@ import UpcomingMatchCard from "@/components/UpcomingMatchCard";
 // Mock data for live matches
 const liveMatches = [
   {
+    id: "live1",
     homeTeam: "Arsenal",
     awayTeam: "Chelsea",
     league: "Premier League",
+    country: "England",
     time: "62'",
     date: "Live",
     homeOdds: 2.10,
@@ -22,9 +23,11 @@ const liveMatches = [
     isLive: true
   },
   {
+    id: "live2",
     homeTeam: "Lakers",
     awayTeam: "Celtics",
     league: "NBA",
+    country: "USA",
     time: "Q3 8:42",
     date: "Live",
     homeOdds: 1.85,
@@ -32,9 +35,11 @@ const liveMatches = [
     isLive: true
   },
   {
+    id: "live3",
     homeTeam: "PSG",
     awayTeam: "Lyon",
     league: "Ligue 1",
+    country: "France",
     time: "34'",
     date: "Live",
     homeOdds: 1.55,
@@ -43,9 +48,11 @@ const liveMatches = [
     isLive: true
   },
   {
+    id: "live4",
     homeTeam: "Real Madrid",
     awayTeam: "Atletico Madrid",
     league: "La Liga",
+    country: "Spain",
     time: "77'",
     date: "Live",
     homeOdds: 1.30,
@@ -54,9 +61,11 @@ const liveMatches = [
     isLive: true
   },
   {
+    id: "live5",
     homeTeam: "Bucks",
     awayTeam: "76ers",
     league: "NBA",
+    country: "USA",
     time: "Q4 2:18",
     date: "Live",
     homeOdds: 2.30,
@@ -64,9 +73,11 @@ const liveMatches = [
     isLive: true
   },
   {
+    id: "live6",
     homeTeam: "Bayern Munich",
     awayTeam: "Leverkusen",
     league: "Bundesliga",
+    country: "Germany",
     time: "56'",
     date: "Live",
     homeOdds: 1.90,
@@ -175,7 +186,8 @@ export default function LiveBetting() {
               {activeMatches.length > 0 ? (
                 activeMatches.map((match, index) => (
                   <UpcomingMatchCard
-                    key={index}
+                    key={match.id || `live-${index}`}
+                    id={match.id || `live-${index}`}
                     homeTeam={match.homeTeam}
                     awayTeam={match.awayTeam}
                     league={match.league}

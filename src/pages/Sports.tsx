@@ -468,7 +468,8 @@ export default function Sports() {
                 {filteredMatches.length > 0 ? (
                   filteredMatches.map((match, index) => (
                     <UpcomingMatchCard
-                      key={match.id || index}
+                      key={match.id || `${validSport}-${index}`}
+                      id={match.id || `${validSport}-${index}`}
                       homeTeam={match.homeTeam}
                       awayTeam={match.awayTeam}
                       league={match.league}

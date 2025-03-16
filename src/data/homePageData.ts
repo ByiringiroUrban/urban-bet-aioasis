@@ -1,4 +1,3 @@
-
 export const aiInsights = [
   {
     match: "Manchester United vs Liverpool",
@@ -27,9 +26,11 @@ export const aiInsights = [
 
 export const upcomingMatches = [
   {
+    id: "match1",
     homeTeam: "Chelsea",
     awayTeam: "Arsenal",
     league: "Premier League",
+    country: "England",
     time: "15:00",
     date: "Sat, 15 Oct",
     homeOdds: 2.40,
@@ -37,9 +38,11 @@ export const upcomingMatches = [
     awayOdds: 2.90
   },
   {
+    id: "match2",
     homeTeam: "PSG",
     awayTeam: "Bayern Munich",
     league: "Champions League",
+    country: "Europe",
     time: "20:00",
     date: "Wed, 19 Oct",
     homeOdds: 2.10,
@@ -48,18 +51,22 @@ export const upcomingMatches = [
     isLive: true
   },
   {
+    id: "match3",
     homeTeam: "Lakers",
     awayTeam: "Celtics",
     league: "NBA",
+    country: "USA",
     time: "19:30",
     date: "Thu, 20 Oct",
     homeOdds: 1.85,
     awayOdds: 1.95
   },
   {
+    id: "match4",
     homeTeam: "Nadal",
     awayTeam: "Federer",
     league: "ATP Masters",
+    country: "International",
     time: "14:00",
     date: "Fri, 21 Oct",
     homeOdds: 1.75,
