@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Search, FilterIcon, ChevronRight, ChevronDown, Football, Circle, User, Dribbble } from "lucide-react";
+import { Search, FilterIcon, ChevronRight, ChevronDown, CircleDot, Circle, User, Dribbble } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -232,7 +232,7 @@ const sportsData: Record<string, (BaseMatch | MatchWithDraw)[]> = {
 const SportIcon = ({ sportId }: { sportId: string }) => {
   switch (sportId) {
     case 'football':
-      return <Football className="h-5 w-5" />;
+      return <CircleDot className="h-5 w-5" />;
     case 'basketball':
       return <Dribbble className="h-5 w-5" />;
     case 'tennis':
