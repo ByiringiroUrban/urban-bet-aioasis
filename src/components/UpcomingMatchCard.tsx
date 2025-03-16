@@ -10,6 +10,7 @@ import { mongoService } from "@/services/mongoService";
 import { useToast } from "@/hooks/use-toast";
 
 interface UpcomingMatchCardProps {
+  id: string; // Added id for unique identification
   homeTeam: string;
   awayTeam: string;
   league: string;
@@ -19,9 +20,12 @@ interface UpcomingMatchCardProps {
   drawOdds?: number;
   awayOdds: number;
   isLive?: boolean;
+  onExpandMarket?: (matchId: string | null) => void;
+  isExpanded?: boolean;
 }
 
 export default function UpcomingMatchCard({
+  id,
   homeTeam,
   awayTeam,
   league,
@@ -30,11 +34,13 @@ export default function UpcomingMatchCard({
   homeOdds,
   drawOdds,
   awayOdds,
-  isLive = false
+  isLive = false,
+  onExpandMarket,
+  isExpanded = false
 }: UpcomingMatchCardProps) {
   const { addBet } = useBetting();
   const { toast } = useToast();
-  const [showMoreMarkets, setShowMoreMarkets] = useState(false);
+  const [showMoreMarkets, setShowMoreMarkets] = useState(isExpanded);
   const [isLoadingMarkets, setIsLoadingMarkets] = useState(false);
   const [markets, setMarkets] = useState<any[]>([]);
   const [selectedOdds, setSelectedOdds] = useState<string | null>(null);
@@ -56,6 +62,20 @@ export default function UpcomingMatchCard({
   };
 
   const handleShowMoreMarkets = async () => {
+    if (showMoreMarkets) {
+      // Close markets
+      setShowMoreMarkets(false);
+      if (onExpandMarket) {
+        onExpandMarket(null);
+      }
+      return;
+    }
+    
+    // Notify parent component about expansion
+    if (onExpandMarket) {
+      onExpandMarket(id);
+    }
+    
     setIsLoadingMarkets(true);
     try {
       // Generate a fake event ID based on team names
@@ -73,6 +93,11 @@ export default function UpcomingMatchCard({
       setIsLoadingMarkets(false);
     }
   };
+
+  // Update local state when props change
+  if (isExpanded !== showMoreMarkets) {
+    setShowMoreMarkets(isExpanded);
+  }
 
   const OddsButton = ({ 
     label, 
@@ -166,34 +191,40 @@ export default function UpcomingMatchCard({
 
         {showMoreMarkets && (
           <div className="mt-4 space-y-4 border-t border-border/50 pt-4">
-            {markets.map((market) => (
-              <div key={market.id} className="space-y-2">
-                <h4 className="text-sm font-medium">{market.name}</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {market.options.map((option: string, index: number) => {
-                    // Generate a consistent but random odds value for each option
-                    const randomOdds = 2 + Math.random() * 3;
-                    const selectionKey = `${market.name}: ${option}`;
-                    return (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          "text-xs",
-                          selectedOdds === selectionKey 
-                            ? "border-bet-primary bg-bet-primary/10 text-bet-primary" 
-                            : "hover:border-bet-primary hover:bg-bet-primary/5"
-                        )}
-                        onClick={() => addToBettingSlip(selectionKey, randomOdds)}
-                      >
-                        {option} <span className="ml-1 text-bet-primary">{randomOdds.toFixed(2)}</span>
-                      </Button>
-                    );
-                  })}
+            {markets.length > 0 ? (
+              markets.map((market) => (
+                <div key={market.id} className="space-y-2">
+                  <h4 className="text-sm font-medium">{market.name}</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {market.options.map((option: string, index: number) => {
+                      // Generate a consistent but random odds value for each option
+                      const randomOdds = 2 + Math.random() * 3;
+                      const selectionKey = `${market.name}: ${option}`;
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "text-xs",
+                            selectedOdds === selectionKey 
+                              ? "border-bet-primary bg-bet-primary/10 text-bet-primary" 
+                              : "hover:border-bet-primary hover:bg-bet-primary/5"
+                          )}
+                          onClick={() => addToBettingSlip(selectionKey, randomOdds)}
+                        >
+                          {option} <span className="ml-1 text-bet-primary">{randomOdds.toFixed(2)}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-2">
+                <p className="text-sm text-muted-foreground">Loading markets...</p>
               </div>
-            ))}
+            )}
           </div>
         )}
       </CardContent>

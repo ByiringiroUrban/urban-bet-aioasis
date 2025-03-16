@@ -1,52 +1,53 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpcomingMatchCard from "@/components/UpcomingMatchCard";
 
 interface Match {
+  id: string;
   homeTeam: string;
   awayTeam: string;
   league: string;
+  country: string;
   time: string;
   date: string;
   homeOdds: number;
-  drawOdds?: number;
+  drawOdds: number;
   awayOdds: number;
   isLive?: boolean;
 }
 
-export default function SportsBettingSection({ upcomingMatches }: { upcomingMatches: Match[] }) {
-  const [activeTab, setActiveTab] = useState("featured");
+interface SportsBettingSectionProps {
+  upcomingMatches: Match[];
+}
+
+export default function SportsBettingSection({ upcomingMatches }: SportsBettingSectionProps) {
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   
+  const handleExpandMarket = (matchId: string | null) => {
+    setExpandedMatchId(matchId);
+  };
+
   return (
     <section className="py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">Sports Betting</h2>
-            <p className="text-muted-foreground">Browse upcoming matches and place your bets</p>
-          </div>
-          
-          <Tabs 
-            defaultValue="featured" 
-            className="mt-4 md:mt-0"
-            onValueChange={setActiveTab}
-          >
-            <TabsList>
-              <TabsTrigger value="featured">Featured</TabsTrigger>
-              <TabsTrigger value="live">Live Now</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold">Top Sports Events</h2>
+          <Button asChild variant="link" className="group">
+            <Link to="/sports/football">
+              View All Sports 
+              <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {upcomingMatches.map((match, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {upcomingMatches.map((match) => (
             <UpcomingMatchCard
-              key={index}
+              key={match.id}
+              id={match.id}
               homeTeam={match.homeTeam}
               awayTeam={match.awayTeam}
               league={match.league}
@@ -56,31 +57,10 @@ export default function SportsBettingSection({ upcomingMatches }: { upcomingMatc
               drawOdds={match.drawOdds}
               awayOdds={match.awayOdds}
               isLive={match.isLive}
+              onExpandMarket={handleExpandMarket}
+              isExpanded={expandedMatchId === match.id}
             />
           ))}
-        </div>
-        
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Button asChild variant="default">
-            <Link to="/sports/football">
-              Football <ArrowRight size={16} className="ml-1" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/sports/basketball">
-              Basketball <ArrowRight size={16} className="ml-1" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/sports/tennis">
-              Tennis <ArrowRight size={16} className="ml-1" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/sports">
-              All Sports <ArrowRight size={16} className="ml-1" />
-            </Link>
-          </Button>
         </div>
       </div>
     </section>
