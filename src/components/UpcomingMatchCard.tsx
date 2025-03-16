@@ -158,17 +158,21 @@ export default function UpcomingMatchCard({
               <div key={market.id} className="space-y-2">
                 <h4 className="text-sm font-medium">{market.name}</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.options.map((option: string, index: number) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs hover:border-bet-primary hover:bg-bet-primary/5"
-                      onClick={() => addToBettingSlip(`${market.name}: ${option}`, (2 + Math.random() * 3).toFixed(2))}
-                    >
-                      {option} <span className="ml-1 text-bet-primary">{(2 + Math.random() * 3).toFixed(2)}</span>
-                    </Button>
-                  ))}
+                  {market.options.map((option: string, index: number) => {
+                    // Generate a consistent but random odds value for each option
+                    const randomOdds = 2 + Math.random() * 3;
+                    return (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs hover:border-bet-primary hover:bg-bet-primary/5"
+                        onClick={() => addToBettingSlip(`${market.name}: ${option}`, randomOdds)}
+                      >
+                        {option} <span className="ml-1 text-bet-primary">{randomOdds.toFixed(2)}</span>
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             ))}
