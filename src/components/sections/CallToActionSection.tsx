@@ -2,8 +2,18 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { isAuthenticated } from "@/utils/authUtils";
 
 export default function CallToActionSection() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    setIsLoggedIn(isAuthenticated());
+  }, []);
+
+  if (isLoggedIn) return null;
+
   return (
     <section className="py-16 px-4 relative overflow-hidden">
       <div 
@@ -27,8 +37,8 @@ export default function CallToActionSection() {
             </Link>
           </Button>
           <Button size="lg" variant="outline" className="border-white/20 hover:bg-white/10" asChild>
-            <Link to="/about">
-              Learn More
+            <Link to="/login">
+              Login
             </Link>
           </Button>
         </div>

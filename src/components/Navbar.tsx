@@ -16,7 +16,7 @@ import {
   Wallet,
   Settings
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -33,6 +33,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { isAuthenticated, logout } from "@/utils/authUtils";
 import { useBetting } from "@/contexts/BettingContext";
 
@@ -44,7 +58,16 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [userBalance, setUserBalance] = useState("0");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { currency } = useBetting();
+
+  // Mock notifications data
+  const notifications = [
+    { id: 1, message: "Your deposit was successful", time: "5 minutes ago", isRead: false },
+    { id: 2, message: "Arsenal vs Chelsea match starts in 30 minutes", time: "30 minutes ago", isRead: false },
+    { id: 3, message: "Congratulations! You won 25,000 RWF", time: "2 hours ago", isRead: true }
+  ];
 
   useEffect(() => {
     // Check if user is logged in
@@ -72,6 +95,19 @@ export default function Navbar() {
     });
     
     navigate("/");
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      toast({
+        title: "Search initiated",
+        description: `Searching for: ${searchQuery}`,
+      });
+      // In a real app, this would navigate to search results page
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
   };
 
   return (
@@ -135,16 +171,72 @@ export default function Navbar() {
 
           {/* Desktop Action Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-foreground hover:text-bet-primary transition-colors">
-              <Search size={20} />
-            </button>
+            {/* Search Dialog */}
+            <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+              <DialogTrigger asChild>
+                <button className="text-foreground hover:text-bet-primary transition-colors">
+                  <Search size={20} />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Search UrbanBet</DialogTitle>
+                  <DialogDescription>
+                    Search for events, teams, or games
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSearch} className="flex space-x-2">
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="flex-1"
+                  />
+                  <Button type="submit">Search</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
             
             {isLoggedIn ? (
               <>
-                <button className="relative text-foreground hover:text-bet-primary transition-colors">
-                  <Bell size={20} />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-bet-primary rounded-full text-xs flex items-center justify-center">3</span>
-                </button>
+                {/* Notifications Popover */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="relative text-foreground hover:text-bet-primary transition-colors">
+                      <Bell size={20} />
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-bet-primary rounded-full text-xs flex items-center justify-center">
+                        {notifications.filter(n => !n.isRead).length}
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0" align="end">
+                    <div className="p-4 border-b border-border">
+                      <h4 className="font-medium">Notifications</h4>
+                    </div>
+                    <div className="max-h-80 overflow-auto">
+                      {notifications.length > 0 ? (
+                        notifications.map(notification => (
+                          <div 
+                            key={notification.id} 
+                            className={`p-3 border-b border-border last:border-0 hover:bg-accent/5 ${notification.isRead ? 'opacity-70' : ''}`}
+                          >
+                            <div className="text-sm">{notification.message}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{notification.time}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-muted-foreground">
+                          No notifications
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2 border-t border-border">
+                      <Button variant="ghost" size="sm" className="w-full">
+                        View all notifications
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="focus:outline-none">

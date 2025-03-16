@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import BettingSlip from "@/components/BettingSlip";
@@ -10,8 +10,15 @@ import SportsBettingSection from "@/components/sections/SportsBettingSection";
 import CasinoGamesSection from "@/components/sections/CasinoGamesSection";
 import CallToActionSection from "@/components/sections/CallToActionSection";
 import { aiInsights, upcomingMatches, casinoGames } from "@/data/homePageData";
+import { isAuthenticated } from "@/utils/authUtils";
 
 const Index = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    setIsLoggedIn(isAuthenticated());
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -22,7 +29,7 @@ const Index = () => {
         <AIInsightsSection aiInsights={aiInsights} />
         <SportsBettingSection upcomingMatches={upcomingMatches} />
         <CasinoGamesSection casinoGames={casinoGames} />
-        <CallToActionSection />
+        {!isLoggedIn && <CallToActionSection />}
       </main>
       
       <BettingSlip />

@@ -37,12 +37,21 @@ export default function UpcomingMatchCard({
   const [showMoreMarkets, setShowMoreMarkets] = useState(false);
   const [isLoadingMarkets, setIsLoadingMarkets] = useState(false);
   const [markets, setMarkets] = useState<any[]>([]);
+  const [selectedOdds, setSelectedOdds] = useState<string | null>(null);
 
   const addToBettingSlip = (selection: string, odds: number) => {
     addBet({
       event: `${homeTeam} vs ${awayTeam}`,
       selection,
       odds
+    });
+    
+    // Highlight the selected odds
+    setSelectedOdds(selection);
+    
+    toast({
+      title: "Added to Bet Slip",
+      description: `${selection} - ${homeTeam} vs ${awayTeam}`,
     });
   };
 
@@ -81,7 +90,7 @@ export default function UpcomingMatchCard({
     <Button 
       variant="outline" 
       className={cn(
-        "flex flex-col items-center py-3 transition-all duration-200",
+        "flex flex-col items-center justify-center h-auto py-3 w-full transition-all duration-200",
         isSelected ? "border-bet-primary bg-bet-primary/10 text-bet-primary" : "border-border",
         disabled ? "opacity-50 cursor-not-allowed" : 
         "hover:border-bet-primary hover:bg-bet-primary/5 hover:text-bet-primary active:scale-95"
@@ -92,7 +101,7 @@ export default function UpcomingMatchCard({
       <span className="text-xs text-muted-foreground mb-1">{label}</span>
       <span className={cn(
         "font-bold text-lg",
-        isSelected ? "text-bet-primary" : "bg-gradient-to-r from-bet-primary to-bet-accent bg-clip-text text-transparent"
+        isSelected ? "text-bet-primary" : ""
       )}>
         {odds.toFixed(2)}
       </span>
@@ -126,6 +135,7 @@ export default function UpcomingMatchCard({
             label="Home"
             odds={homeOdds}
             onClick={() => addToBettingSlip(`${homeTeam} to win`, homeOdds)}
+            isSelected={selectedOdds === `${homeTeam} to win`}
           />
           
           {drawOdds ? (
@@ -133,11 +143,12 @@ export default function UpcomingMatchCard({
               label="Draw"
               odds={drawOdds}
               onClick={() => addToBettingSlip("Draw", drawOdds)}
+              isSelected={selectedOdds === "Draw"}
             />
           ) : (
             <Button 
               variant="outline" 
-              className="flex flex-col items-center py-3 opacity-50 cursor-not-allowed"
+              className="flex flex-col items-center justify-center h-auto py-3 opacity-50 cursor-not-allowed w-full"
               disabled
             >
               <span className="text-xs text-muted-foreground mb-1">Draw</span>
@@ -149,6 +160,7 @@ export default function UpcomingMatchCard({
             label="Away"
             odds={awayOdds}
             onClick={() => addToBettingSlip(`${awayTeam} to win`, awayOdds)}
+            isSelected={selectedOdds === `${awayTeam} to win`}
           />
         </div>
 
@@ -161,13 +173,19 @@ export default function UpcomingMatchCard({
                   {market.options.map((option: string, index: number) => {
                     // Generate a consistent but random odds value for each option
                     const randomOdds = 2 + Math.random() * 3;
+                    const selectionKey = `${market.name}: ${option}`;
                     return (
                       <Button
                         key={index}
                         variant="outline"
                         size="sm"
-                        className="text-xs hover:border-bet-primary hover:bg-bet-primary/5"
-                        onClick={() => addToBettingSlip(`${market.name}: ${option}`, randomOdds)}
+                        className={cn(
+                          "text-xs",
+                          selectedOdds === selectionKey 
+                            ? "border-bet-primary bg-bet-primary/10 text-bet-primary" 
+                            : "hover:border-bet-primary hover:bg-bet-primary/5"
+                        )}
+                        onClick={() => addToBettingSlip(selectionKey, randomOdds)}
                       >
                         {option} <span className="ml-1 text-bet-primary">{randomOdds.toFixed(2)}</span>
                       </Button>

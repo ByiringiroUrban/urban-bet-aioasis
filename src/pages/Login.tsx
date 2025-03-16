@@ -1,9 +1,21 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthForm from "@/components/AuthForm";
+import { isAuthenticated } from "@/utils/authUtils";
 
 const Login = () => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if user is already logged in
+    if (isAuthenticated()) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
