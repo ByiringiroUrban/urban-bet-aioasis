@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import UpcomingMatchCard from "@/components/UpcomingMatchCard";
+import { Match } from "@/types";
 
 // Mock data for live matches
-const liveMatches = [
+const liveMatches: Match[] = [
   {
     id: "live1",
     homeTeam: "Arsenal",
@@ -90,7 +91,13 @@ const liveMatches = [
 export default function LiveBetting() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSport, setActiveSport] = useState("all");
-  const [activeMatches, setActiveMatches] = useState(liveMatches);
+  const [activeMatches, setActiveMatches] = useState<Match[]>(liveMatches);
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+  
+  // Handle expanding only one match at a time
+  const handleExpandMarket = (matchId: string | null) => {
+    setExpandedMatchId(matchId);
+  };
   
   // Filter matches based on search query and active sport
   useEffect(() => {
@@ -184,10 +191,10 @@ export default function LiveBetting() {
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {activeMatches.length > 0 ? (
-                activeMatches.map((match, index) => (
+                activeMatches.map((match) => (
                   <UpcomingMatchCard
-                    key={match.id || `live-${index}`}
-                    id={match.id || `live-${index}`}
+                    key={match.id}
+                    id={match.id}
                     homeTeam={match.homeTeam}
                     awayTeam={match.awayTeam}
                     league={match.league}

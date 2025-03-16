@@ -1,4 +1,7 @@
-export const aiInsights = [
+
+import { Match, CasinoGame, AIInsight } from "@/types";
+
+export const aiInsights: AIInsight[] = [
   {
     match: "Manchester United vs Liverpool",
     prediction: "Liverpool to win",
@@ -24,7 +27,7 @@ export const aiInsights = [
   }
 ];
 
-export const upcomingMatches = [
+export const upcomingMatches: Match[] = [
   {
     id: "match1",
     homeTeam: "Chelsea",
@@ -59,6 +62,7 @@ export const upcomingMatches = [
     time: "19:30",
     date: "Thu, 20 Oct",
     homeOdds: 1.85,
+    drawOdds: 0, // Adding a placeholder value for sports without draws
     awayOdds: 1.95
   },
   {
@@ -70,11 +74,12 @@ export const upcomingMatches = [
     time: "14:00",
     date: "Fri, 21 Oct",
     homeOdds: 1.75,
+    drawOdds: 0, // Adding a placeholder value for sports without draws
     awayOdds: 2.05
   }
 ];
 
-export const casinoGames = [
+export const casinoGames: CasinoGame[] = [
   {
     title: "Fortune Tiger",
     imageSrc: "https://images.unsplash.com/photo-1606167668584-78701c57f13d?q=80&w=500&auto=format&fit=crop",

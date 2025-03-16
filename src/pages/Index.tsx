@@ -11,6 +11,7 @@ import CasinoGamesSection from "@/components/sections/CasinoGamesSection";
 import CallToActionSection from "@/components/sections/CallToActionSection";
 import { aiInsights, upcomingMatches, casinoGames } from "@/data/homePageData";
 import { isAuthenticated } from "@/utils/authUtils";
+import { Match } from "@/types";
 
 const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,7 +29,7 @@ const Index = () => {
         <Hero />
         <FeaturesSection />
         <AIInsightsSection aiInsights={aiInsights} />
-        <SportsBettingSection upcomingMatches={upcomingMatches} />
+        <SportsBettingSection upcomingMatches={upcomingMatches as Match[]} />
         <CasinoGamesSection casinoGames={casinoGames} />
         {!isLoggedIn && <CallToActionSection />}
       </main>

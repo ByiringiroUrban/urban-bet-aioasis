@@ -1,49 +1,38 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Match } from "@/types";
 import UpcomingMatchCard from "@/components/UpcomingMatchCard";
-
-interface Match {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  league: string;
-  country: string;
-  time: string;
-  date: string;
-  homeOdds: number;
-  drawOdds: number;
-  awayOdds: number;
-  isLive?: boolean;
-}
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SportsBettingSectionProps {
   upcomingMatches: Match[];
 }
 
 export default function SportsBettingSection({ upcomingMatches }: SportsBettingSectionProps) {
+  const navigate = useNavigate();
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   
+  // This function handles expanding only one match at a time
   const handleExpandMarket = (matchId: string | null) => {
     setExpandedMatchId(matchId);
   };
 
   return (
-    <section className="py-12 px-4">
+    <section className="py-16 px-4 bg-gradient-to-b from-background to-background/95">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold">Top Sports Events</h2>
-          <Button asChild variant="link" className="group">
-            <Link to="/sports/football">
-              View All Sports 
-              <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-            </Link>
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Sports Betting</h2>
+            <p className="text-muted-foreground mt-2">Upcoming matches with AI-enhanced odds</p>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/sports")}>
+            View All Sports <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {upcomingMatches.map((match) => (
             <UpcomingMatchCard
               key={match.id}
@@ -57,8 +46,8 @@ export default function SportsBettingSection({ upcomingMatches }: SportsBettingS
               drawOdds={match.drawOdds}
               awayOdds={match.awayOdds}
               isLive={match.isLive}
-              onExpandMarket={handleExpandMarket}
               isExpanded={expandedMatchId === match.id}
+              onExpandMarket={handleExpandMarket}
             />
           ))}
         </div>
