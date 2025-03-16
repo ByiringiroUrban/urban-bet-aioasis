@@ -1,16 +1,26 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Trash2, X, ChevronDown, ChevronUp, CircleDollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, X, ChevronDown, ChevronUp, CircleDollarSign, Info } from "lucide-react";
 import { useBetting } from "@/contexts/BettingContext";
 import { cn } from "@/lib/utils";
+import { isAuthenticated } from "@/utils/authUtils";
 
 export default function BettingSlip() {
   const [isOpen, setIsOpen] = useState(false);
   const [betAmount, setBetAmount] = useState<string>("");
-  const { betItems, removeBet, clearBets, placeBet } = useBetting();
+  const { 
+    betItems, 
+    removeBet, 
+    clearBets, 
+    placeBet, 
+    currency,
+    setCurrency,
+    convertAmount 
+  } = useBetting();
 
   const toggleOpen = () => setIsOpen(!isOpen);
 
@@ -30,8 +40,26 @@ export default function BettingSlip() {
     setBetAmount("");
   };
 
+  const toggleCurrency = () => {
+    setCurrency(currency === "USD" ? "RWF" : "USD");
+    // Recalculate bet amount if needed
+    if (betAmount) {
+      const amount = parseFloat(betAmount);
+      if (!isNaN(amount)) {
+        setBetAmount(convertAmount(amount, currency, currency === "USD" ? "RWF" : "USD").toFixed(0));
+      }
+    }
+  };
+
+  // Auto-open betting slip when items are added
+  useEffect(() => {
+    if (betItems.length > 0 && !isOpen) {
+      setIsOpen(true);
+    }
+  }, [betItems.length]);
+
   return (
-    <div className="fixed bottom-0 right-0 z-40 w-full md:w-80 md:mr-4 md:mb-4 md:rounded-lg glass border border-bet-primary/20 shadow-lg transition-all duration-300">
+    <div className="fixed bottom-0 right-0 z-40 w-full md:w-80 md:mr-4 md:mb-4 md:rounded-lg glass border border-bet-primary/30 shadow-lg transition-all duration-300">
       {/* Mobile Toggle Header */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer md:hidden bg-bet-dark-accent rounded-t-lg"
@@ -39,9 +67,12 @@ export default function BettingSlip() {
       >
         <div className="flex items-center space-x-2">
           <span className="font-medium">Betting Slip</span>
-          <span className="bg-bet-primary/20 text-bet-primary px-2 py-0.5 rounded-full text-xs">
+          <Badge 
+            variant="outline" 
+            className="bg-bet-primary/20 text-bet-primary border-bet-primary/30 hover:bg-bet-primary/30"
+          >
             {betItems.length}
-          </span>
+          </Badge>
         </div>
         {isOpen ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
       </div>
@@ -52,10 +83,21 @@ export default function BettingSlip() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-medium flex items-center">
               Betting Slip
-              <span className="ml-2 bg-bet-primary/20 text-bet-primary px-2 py-0.5 rounded-full text-xs">
+              <Badge 
+                variant="outline" 
+                className="ml-2 bg-bet-primary/20 text-bet-primary border-bet-primary/30 hover:bg-bet-primary/30"
+              >
                 {betItems.length}
-              </span>
+              </Badge>
             </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs font-normal"
+              onClick={toggleCurrency}
+            >
+              {currency === "RWF" ? "RWF" : "USD"}
+            </Button>
           </div>
         </CardHeader>
         
@@ -65,7 +107,7 @@ export default function BettingSlip() {
               {betItems.map(bet => (
                 <div 
                   key={bet.id} 
-                  className="bg-muted rounded-lg p-3 relative border border-border/50 group transition-all hover:border-bet-primary/30"
+                  className="relative rounded-lg p-3 border border-border/50 group transition-all hover:border-bet-primary/30 bg-gradient-to-br from-transparent to-bet-primary/5"
                 >
                   <button 
                     className="absolute top-2 right-2 text-muted-foreground hover:text-bet-danger transition-colors"
@@ -75,8 +117,11 @@ export default function BettingSlip() {
                   </button>
                   <div className="text-sm font-medium">{bet.event}</div>
                   <div className="text-sm text-muted-foreground">{bet.selection}</div>
-                  <div className="mt-1 text-sm font-semibold bg-gradient-to-r from-bet-primary to-bet-accent bg-clip-text text-transparent">
-                    Odds: {bet.odds.toFixed(2)}
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Odds</span>
+                    <span className="text-sm font-semibold bg-gradient-to-r from-bet-primary to-bet-accent bg-clip-text text-transparent">
+                      {bet.odds.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -99,21 +144,37 @@ export default function BettingSlip() {
             </div>
             
             <div className="w-full">
-              <div className="text-sm mb-1">Bet Amount:</div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm">Bet Amount:</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-2 text-xs font-normal -mr-2"
+                  onClick={toggleCurrency}
+                >
+                  {currency}
+                </Button>
+              </div>
               <Input
                 type="number"
                 min="1"
-                placeholder="Enter amount"
+                placeholder={`Enter amount in ${currency}`}
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
                 className="w-full"
               />
+              {currency === "RWF" && (
+                <p className="text-xs text-muted-foreground mt-1">Min: 1,000 RWF</p>
+              )}
             </div>
             
             {betAmount && (
               <div className="flex justify-between w-full">
                 <span className="text-sm">Potential Winnings:</span>
-                <span className="font-semibold text-bet-secondary">${calculatePotentialWinnings()}</span>
+                <span className="font-semibold text-bet-secondary">
+                  {currency === "RWF" ? "RWF " : "$"}
+                  {calculatePotentialWinnings()}
+                </span>
               </div>
             )}
             
@@ -133,12 +194,19 @@ export default function BettingSlip() {
               <Button 
                 size="sm" 
                 className="flex-1 bg-bet-primary hover:bg-bet-primary/90 transition-all"
-                disabled={!betAmount || parseFloat(betAmount) <= 0 || betItems.length === 0}
+                disabled={!betAmount || parseFloat(betAmount) <= 0 || betItems.length === 0 || !isAuthenticated()}
                 onClick={handlePlaceBet}
               >
                 Place Bet
               </Button>
             </div>
+            
+            {!isAuthenticated() && (
+              <div className="flex items-center mt-2 p-2 rounded-md bg-bet-primary/10 border border-bet-primary/20 text-xs">
+                <Info size={14} className="text-bet-primary mr-2 shrink-0" />
+                <span>Please log in to place bets</span>
+              </div>
+            )}
           </CardFooter>
         )}
       </div>

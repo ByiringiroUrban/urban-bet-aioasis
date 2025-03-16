@@ -1,6 +1,8 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { toast } from "sonner";
+import { mongoService } from "@/services/mongoService";
+import { isAuthenticated } from "@/utils/authUtils";
 
 export interface BetItem {
   id: string;
@@ -15,12 +17,24 @@ interface BettingContextType {
   removeBet: (id: string) => void;
   clearBets: () => void;
   placeBet: (amount: number) => Promise<void>;
+  currency: "USD" | "RWF";
+  setCurrency: (currency: "USD" | "RWF") => void;
+  exchangeRate: number;
+  convertAmount: (amount: number, from: "USD" | "RWF", to: "USD" | "RWF") => number;
 }
 
 const BettingContext = createContext<BettingContextType | undefined>(undefined);
 
 export const BettingProvider = ({ children }: { children: ReactNode }) => {
   const [betItems, setBetItems] = useState<BetItem[]>([]);
+  const [currency, setCurrency] = useState<"USD" | "RWF">("RWF");
+  // Exchange rate: 1 USD = 1200 RWF
+  const exchangeRate = 1200;
+  
+  const convertAmount = (amount: number, from: "USD" | "RWF", to: "USD" | "RWF"): number => {
+    if (from === to) return amount;
+    return from === "USD" ? amount * exchangeRate : amount / exchangeRate;
+  };
 
   const addBet = (bet: Omit<BetItem, "id">) => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -60,23 +74,32 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // In a real application, this would make an API call to MongoDB
+      // Get user ID or use a default if not logged in
+      const userId = isAuthenticated() ? localStorage.getItem("userToken") || "guest" : "guest";
+      
+      // Prepare bet data
+      const totalOdds = betItems.reduce((acc, bet) => acc * bet.odds, 1);
       const betData = {
-        items: betItems,
-        totalOdds: betItems.reduce((acc, bet) => acc * bet.odds, 1),
-        amount,
+        userId,
+        items: betItems.map(({id, ...item}) => item), // Remove client-side ID
+        totalOdds,
+        amount: currency === "USD" ? convertAmount(amount, "USD", "RWF") : amount,
+        potentialWinnings: currency === "USD" 
+          ? convertAmount(amount * totalOdds, "USD", "RWF") 
+          : amount * totalOdds,
         timestamp: new Date().toISOString(),
-        status: "pending"
+        status: 'pending' as const
       };
 
-      // Simulating API call
-      console.log("Saving bet to MongoDB:", betData);
+      // Save bet to MongoDB
+      const result = await mongoService.saveBet(betData);
       
-      // Mock successful DB operation
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      toast.success("Bet placed successfully!");
-      clearBets();
+      if (result.success) {
+        toast.success("Bet placed successfully!");
+        clearBets();
+      } else {
+        throw new Error("Failed to save bet");
+      }
     } catch (error) {
       console.error("Error placing bet:", error);
       toast.error("Failed to place bet. Please try again.");
@@ -84,7 +107,17 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <BettingContext.Provider value={{ betItems, addBet, removeBet, clearBets, placeBet }}>
+    <BettingContext.Provider value={{ 
+      betItems, 
+      addBet, 
+      removeBet, 
+      clearBets, 
+      placeBet,
+      currency,
+      setCurrency,
+      exchangeRate,
+      convertAmount
+    }}>
       {children}
     </BettingContext.Provider>
   );

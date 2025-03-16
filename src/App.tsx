@@ -14,6 +14,8 @@ import Casino from "./pages/Casino";
 import Sports from "./pages/Sports";
 import LiveBetting from "./pages/LiveBetting";
 import NotFound from "./pages/NotFound";
+import Account from "./pages/Account";
+import Wallet from "./pages/Wallet";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/sports" element={<Sports />} />
             <Route path="/sports/:sport" element={<Sports />} />
             <Route path="/live" element={<LiveBetting />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/wallet" element={<Wallet />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -3,8 +3,11 @@ import { Clock, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { useBetting } from "@/contexts/BettingContext";
 import { cn } from "@/lib/utils";
+import { mongoService } from "@/services/mongoService";
+import { useToast } from "@/hooks/use-toast";
 
 interface UpcomingMatchCardProps {
   homeTeam: string;
@@ -30,6 +33,10 @@ export default function UpcomingMatchCard({
   isLive = false
 }: UpcomingMatchCardProps) {
   const { addBet } = useBetting();
+  const { toast } = useToast();
+  const [showMoreMarkets, setShowMoreMarkets] = useState(false);
+  const [isLoadingMarkets, setIsLoadingMarkets] = useState(false);
+  const [markets, setMarkets] = useState<any[]>([]);
 
   const addToBettingSlip = (selection: string, odds: number) => {
     addBet({
@@ -39,21 +46,43 @@ export default function UpcomingMatchCard({
     });
   };
 
+  const handleShowMoreMarkets = async () => {
+    setIsLoadingMarkets(true);
+    try {
+      // Generate a fake event ID based on team names
+      const eventId = `${homeTeam.toLowerCase().replace(/\s/g, '')}-${awayTeam.toLowerCase().replace(/\s/g, '')}`;
+      const marketsData = await mongoService.getMarkets(eventId);
+      setMarkets(marketsData);
+      setShowMoreMarkets(true);
+    } catch (error) {
+      toast({
+        title: "Error loading markets",
+        description: "Could not load additional markets for this event",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingMarkets(false);
+    }
+  };
+
   const OddsButton = ({ 
     label, 
     odds, 
     onClick, 
-    disabled = false 
+    disabled = false,
+    isSelected = false
   }: { 
     label: string; 
     odds: number; 
     onClick: () => void; 
-    disabled?: boolean 
+    disabled?: boolean;
+    isSelected?: boolean;
   }) => (
     <Button 
       variant="outline" 
       className={cn(
-        "flex flex-col items-center py-3 transition-all duration-200 border-border",
+        "flex flex-col items-center py-3 transition-all duration-200",
+        isSelected ? "border-bet-primary bg-bet-primary/10 text-bet-primary" : "border-border",
         disabled ? "opacity-50 cursor-not-allowed" : 
         "hover:border-bet-primary hover:bg-bet-primary/5 hover:text-bet-primary active:scale-95"
       )}
@@ -61,14 +90,17 @@ export default function UpcomingMatchCard({
       disabled={disabled}
     >
       <span className="text-xs text-muted-foreground mb-1">{label}</span>
-      <span className="font-bold text-lg bg-gradient-to-r from-bet-primary to-bet-accent bg-clip-text text-transparent">
+      <span className={cn(
+        "font-bold text-lg",
+        isSelected ? "text-bet-primary" : "bg-gradient-to-r from-bet-primary to-bet-accent bg-clip-text text-transparent"
+      )}>
         {odds.toFixed(2)}
       </span>
     </Button>
   );
 
   return (
-    <Card className="card-highlight transition-all duration-300 bg-card border-border/50 hover-scale overflow-hidden">
+    <Card className="card-highlight transition-all duration-300 bg-card border-border/50 hover:shadow-md overflow-hidden">
       <CardHeader className="pb-2 relative">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg font-semibold">{homeTeam} vs {awayTeam}</CardTitle>
@@ -108,8 +140,8 @@ export default function UpcomingMatchCard({
               className="flex flex-col items-center py-3 opacity-50 cursor-not-allowed"
               disabled
             >
-              <span className="text-xs text-muted-foreground mb-1">N/A</span>
-              <span className="font-bold">-</span>
+              <span className="text-xs text-muted-foreground mb-1">Draw</span>
+              <span className="font-bold">N/A</span>
             </Button>
           )}
           
@@ -119,10 +151,40 @@ export default function UpcomingMatchCard({
             onClick={() => addToBettingSlip(`${awayTeam} to win`, awayOdds)}
           />
         </div>
+
+        {showMoreMarkets && (
+          <div className="mt-4 space-y-4 border-t border-border/50 pt-4">
+            {markets.map((market) => (
+              <div key={market.id} className="space-y-2">
+                <h4 className="text-sm font-medium">{market.name}</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {market.options.map((option: string, index: number) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs hover:border-bet-primary hover:bg-bet-primary/5"
+                      onClick={() => addToBettingSlip(`${market.name}: ${option}`, (2 + Math.random() * 3).toFixed(2))}
+                    >
+                      {option} <span className="ml-1 text-bet-primary">{(2 + Math.random() * 3).toFixed(2)}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter>
-        <Button variant="outline" size="sm" className="w-full text-xs group">
-          More Markets <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full text-xs group"
+          onClick={handleShowMoreMarkets}
+          disabled={isLoadingMarkets}
+        >
+          {showMoreMarkets ? "Hide Markets" : (isLoadingMarkets ? "Loading..." : "More Markets")} 
+          <ArrowRight size={14} className={`ml-1 ${showMoreMarkets ? "rotate-90" : ""} group-hover:translate-x-1 transition-transform`} />
         </Button>
       </CardFooter>
     </Card>

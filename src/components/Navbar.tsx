@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -12,7 +12,9 @@ import {
   Zap, 
   Search, 
   Bell,
-  LogOut
+  LogOut,
+  Wallet,
+  Settings
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -31,35 +33,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { isAuthenticated, logout } from "@/utils/authUtils";
+import { useBetting } from "@/contexts/BettingContext";
 
 export default function Navbar() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
-  const [userBalance, setUserBalance] = useState("$0.00");
+  const [userBalance, setUserBalance] = useState("0");
+  const { currency } = useBetting();
 
   useEffect(() => {
     // Check if user is logged in
-    const userToken = localStorage.getItem("userToken");
-    if (userToken) {
-      setIsLoggedIn(true);
+    const authenticated = isAuthenticated();
+    setIsLoggedIn(authenticated);
+    
+    if (authenticated) {
       setUserName(localStorage.getItem("userName") || "User");
       // In a real app, this would fetch the user's balance from an API
-      setUserBalance("$1,250.00");
-    } else {
-      setIsLoggedIn(false);
+      setUserBalance(currency === "RWF" ? "1,500,000" : "1,250.00");
     }
-  }, []);
+  }, [location.pathname, currency]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleLogout = () => {
     // Clear user data
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
+    logout();
     
     setIsLoggedIn(false);
     
@@ -146,8 +149,10 @@ export default function Navbar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger className="focus:outline-none">
                     <div className="flex items-center space-x-2 cursor-pointer">
-                      <span className="text-sm font-medium">{userBalance}</span>
-                      <Avatar className="h-8 w-8 hover-scale">
+                      <span className="text-sm font-medium">
+                        {currency === "RWF" ? "RWF " : "$"}{userBalance}
+                      </span>
+                      <Avatar className="h-8 w-8 hover:scale-105 transition-transform">
                         <AvatarFallback className="bg-bet-accent">
                           {userName.split(' ').map(name => name[0]).join('')}
                         </AvatarFallback>
@@ -158,17 +163,23 @@ export default function Navbar() {
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/dashboard">Dashboard</Link>
+                      <Link to="/dashboard" className="cursor-pointer">
+                        <Trophy size={14} className="mr-2" /> Dashboard
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/account">Account Settings</Link>
+                      <Link to="/account" className="cursor-pointer">
+                        <Settings size={14} className="mr-2" /> Account Settings
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/wallet">Wallet</Link>
+                      <Link to="/wallet" className="cursor-pointer">
+                        <Wallet size={14} className="mr-2" /> Wallet
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      className="text-red-500 focus:text-red-500"
+                      className="text-red-500 focus:text-red-500 cursor-pointer"
                       onClick={handleLogout}
                     >
                       <LogOut size={14} className="mr-2" /> Sign Out
@@ -223,11 +234,25 @@ export default function Navbar() {
                           {userName.split(' ').map(name => name[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">{userBalance}</span>
+                      <span className="text-sm font-medium">
+                        {currency === "RWF" ? "RWF " : "$"}{userBalance}
+                      </span>
                     </div>
                   </div>
                   <Link to="/dashboard" onClick={toggleMenu}>
-                    <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Trophy size={14} className="mr-2" /> Dashboard
+                    </Button>
+                  </Link>
+                  <Link to="/account" onClick={toggleMenu}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Settings size={14} className="mr-2" /> Account Settings
+                    </Button>
+                  </Link>
+                  <Link to="/wallet" onClick={toggleMenu}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Wallet size={14} className="mr-2" /> Wallet
+                    </Button>
                   </Link>
                   <Button 
                     variant="outline" 

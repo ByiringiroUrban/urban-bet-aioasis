@@ -15,6 +15,7 @@ export interface BetRecord {
   potentialWinnings: number;
   timestamp: string;
   status: 'pending' | 'won' | 'lost' | 'cancelled';
+  currency?: 'USD' | 'RWF';
 }
 
 // Mock MongoDB operations
@@ -47,7 +48,7 @@ export const mongoService = {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 600));
       
-      // Mock data that would come from MongoDB
+      // Mock data that would come from MongoDB - with Rwandan currency
       return [
         {
           id: '1',
@@ -60,14 +61,66 @@ export const mongoService = {
             }
           ],
           totalOdds: 2.1,
-          amount: 10,
-          potentialWinnings: 21,
+          amount: 10000, // RWF
+          potentialWinnings: 21000, // RWF
           timestamp: new Date().toISOString(),
-          status: 'pending'
+          status: 'pending',
+          currency: 'RWF'
+        },
+        {
+          id: '2',
+          userId,
+          items: [
+            {
+              event: 'Barcelona vs Real Madrid',
+              selection: 'Draw',
+              odds: 3.25
+            }
+          ],
+          totalOdds: 3.25,
+          amount: 5000, // RWF
+          potentialWinnings: 16250, // RWF
+          timestamp: new Date().toISOString(),
+          status: 'won',
+          currency: 'RWF'
         }
       ];
     } catch (error) {
       console.error('Error fetching bet history from MongoDB:', error);
+      return [];
+    }
+  },
+  
+  // Get all available sports
+  getSports: async (): Promise<string[]> => {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      return ['Football', 'Basketball', 'Tennis', 'Rugby', 'Cricket', 'eSports'];
+    } catch (error) {
+      console.error('Error fetching sports from MongoDB:', error);
+      return ['Football', 'Basketball']; // fallback
+    }
+  },
+  
+  // Get available markets for an event
+  getMarkets: async (eventId: string): Promise<any[]> => {
+    try {
+      console.log('Fetching markets for event:', eventId);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Return mock markets data
+      return [
+        { id: 'm1', name: 'Match Result', options: ['Home Win', 'Draw', 'Away Win'] },
+        { id: 'm2', name: 'Both Teams To Score', options: ['Yes', 'No'] },
+        { id: 'm3', name: 'Over/Under 2.5 Goals', options: ['Over', 'Under'] },
+        { id: 'm4', name: 'First Goal Scorer', options: ['Player 1', 'Player 2', 'No Goal'] },
+      ];
+    } catch (error) {
+      console.error('Error fetching markets from MongoDB:', error);
       return [];
     }
   }
