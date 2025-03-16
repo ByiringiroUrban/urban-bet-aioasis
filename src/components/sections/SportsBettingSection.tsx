@@ -60,10 +60,25 @@ export default function SportsBettingSection({ upcomingMatches }: { upcomingMatc
           ))}
         </div>
         
-        <div className="mt-8 text-center">
-          <Button asChild>
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <Button asChild variant="default">
+            <Link to="/sports/football">
+              Football <ArrowRight size={16} className="ml-1" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/sports/basketball">
+              Basketball <ArrowRight size={16} className="ml-1" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/sports/tennis">
+              Tennis <ArrowRight size={16} className="ml-1" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link to="/sports">
-              View All Sports <ArrowRight size={16} className="ml-1" />
+              All Sports <ArrowRight size={16} className="ml-1" />
             </Link>
           </Button>
         </div>

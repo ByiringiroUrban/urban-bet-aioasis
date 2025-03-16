@@ -16,6 +16,7 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   useEffect(() => {
+    // Check auth status when component mounts and set state
     setIsLoggedIn(isAuthenticated());
   }, []);
 
