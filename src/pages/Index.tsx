@@ -10,7 +10,7 @@ import SportsBettingSection from "@/components/sections/SportsBettingSection";
 import CasinoGamesSection from "@/components/sections/CasinoGamesSection";
 import CallToActionSection from "@/components/sections/CallToActionSection";
 import { aiInsights, upcomingMatches, casinoGames } from "@/data/homePageData";
-import { isAuthenticated } from "@/utils/authUtils";
+import { isAuthenticated, listenForAuthChanges } from "@/utils/authUtils";
 import { Match } from "@/types";
 
 const Index = () => {
@@ -25,20 +25,10 @@ const Index = () => {
     // Check initially
     checkAuth();
     
-    // Set up a listener for storage events (for login/logout events)
-    const handleStorageChange = () => {
-      checkAuth();
-    };
+    // Set up listener for auth changes
+    const cleanup = listenForAuthChanges(checkAuth);
     
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Custom event for auth changes within the same window
-    window.addEventListener('authChange', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authChange', handleStorageChange);
-    };
+    return cleanup;
   }, []);
 
   return (

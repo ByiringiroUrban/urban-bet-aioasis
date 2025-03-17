@@ -25,7 +25,7 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
   localStorage.setItem('userProvider', provider);
   
   // Dispatch a custom event to notify other components about auth state change
-  window.dispatchEvent(new Event('authChange'));
+  window.dispatchEvent(new CustomEvent('authChange'));
   
   return userData;
 };
@@ -43,5 +43,28 @@ export const logout = () => {
   localStorage.removeItem('userProvider');
   
   // Dispatch a custom event to notify other components about auth state change
-  window.dispatchEvent(new Event('authChange'));
+  window.dispatchEvent(new CustomEvent('authChange'));
+};
+
+// Function to get current user data
+export const getCurrentUser = () => {
+  if (!isAuthenticated()) return null;
+  
+  return {
+    token: localStorage.getItem('userToken'),
+    name: localStorage.getItem('userName'),
+    email: localStorage.getItem('userEmail'),
+    provider: localStorage.getItem('userProvider'),
+  };
+};
+
+// Listen for auth changes
+export const listenForAuthChanges = (callback: () => void) => {
+  window.addEventListener('authChange', callback);
+  window.addEventListener('storage', callback); // For cross-tab sync
+  
+  return () => {
+    window.removeEventListener('authChange', callback);
+    window.removeEventListener('storage', callback);
+  };
 };
