@@ -3,6 +3,8 @@ import { Brain, TrendingUp, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useBetting } from "@/contexts/BettingContext";
+import { useState } from "react";
 
 interface AIInsightCardProps {
   match: string;
@@ -21,11 +23,35 @@ export default function AIInsightCard({
   trend,
   odds
 }: AIInsightCardProps) {
+  const { addBet } = useBetting();
+  const [isAdded, setIsAdded] = useState(false);
+  
   // Determine confidence color
   const getConfidenceColor = () => {
     if (confidence >= 75) return "text-bet-secondary";
     if (confidence >= 50) return "text-bet-warning";
     return "text-bet-danger";
+  };
+  
+  // Handle adding to betting slip
+  const handleAddToBettingSlip = () => {
+    // Parse odds from string (example: "2.10")
+    const numericOdds = parseFloat(odds.split(' ')[0]);
+    
+    if (!isNaN(numericOdds)) {
+      addBet({
+        event: match,
+        selection: prediction,
+        odds: numericOdds
+      });
+      
+      setIsAdded(true);
+      
+      // Reset button after 3 seconds
+      setTimeout(() => {
+        setIsAdded(false);
+      }, 3000);
+    }
   };
 
   return (
@@ -73,8 +99,13 @@ export default function AIInsightCard({
         <div className="font-semibold">{odds}</div>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" className="w-full">
-          Add to Betting Slip <ArrowRight size={16} className="ml-1" />
+        <Button 
+          variant={isAdded ? "default" : "outline"} 
+          className={`w-full ${isAdded ? 'bg-bet-secondary hover:bg-bet-secondary/90' : ''}`}
+          onClick={handleAddToBettingSlip}
+        >
+          {isAdded ? "Added to Slip ✓" : "Add to Betting Slip"} 
+          {!isAdded && <ArrowRight size={16} className="ml-1" />}
         </Button>
       </CardFooter>
     </Card>

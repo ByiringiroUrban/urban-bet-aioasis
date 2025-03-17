@@ -1,9 +1,8 @@
-
 import { Clock, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBetting } from "@/contexts/BettingContext";
 import { cn } from "@/lib/utils";
 import { mongoService } from "@/services/mongoService";
@@ -45,6 +44,10 @@ export default function UpcomingMatchCard({
   const [markets, setMarkets] = useState<any[]>([]);
   const [selectedOdds, setSelectedOdds] = useState<string | null>(null);
 
+  useEffect(() => {
+    setShowMoreMarkets(isExpanded);
+  }, [isExpanded]);
+
   const addToBettingSlip = (selection: string, odds: number) => {
     addBet({
       event: `${homeTeam} vs ${awayTeam}`,
@@ -80,8 +83,27 @@ export default function UpcomingMatchCard({
     try {
       // Generate a fake event ID based on team names
       const eventId = `${homeTeam.toLowerCase().replace(/\s/g, '')}-${awayTeam.toLowerCase().replace(/\s/g, '')}`;
+      
+      // Let's avoid random changes by using a consistent seed based on match ID
       const marketsData = await mongoService.getMarkets(eventId);
-      setMarkets(marketsData);
+      
+      // Store markets with fixed odds values
+      const marketsWithFixedOdds = marketsData.map(market => {
+        return {
+          ...market,
+          options: market.options.map((option: string, index: number) => {
+            // Use a deterministic way to generate odds based on match ID and option
+            const seed = (id.charCodeAt(0) + option.length + index) % 100;
+            const fixedOdds = 1.5 + (seed / 100 * 3); // Between 1.5 and 4.5
+            return {
+              label: option,
+              odds: parseFloat(fixedOdds.toFixed(2))
+            };
+          })
+        };
+      });
+      
+      setMarkets(marketsWithFixedOdds);
       setShowMoreMarkets(true);
     } catch (error) {
       toast({
@@ -93,11 +115,6 @@ export default function UpcomingMatchCard({
       setIsLoadingMarkets(false);
     }
   };
-
-  // Update local state when props change
-  if (isExpanded !== showMoreMarkets) {
-    setShowMoreMarkets(isExpanded);
-  }
 
   const OddsButton = ({ 
     label, 
@@ -196,10 +213,8 @@ export default function UpcomingMatchCard({
                 <div key={market.id} className="space-y-2">
                   <h4 className="text-sm font-medium">{market.name}</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    {market.options.map((option: string, index: number) => {
-                      // Generate a consistent but random odds value for each option
-                      const randomOdds = 2 + Math.random() * 3;
-                      const selectionKey = `${market.name}: ${option}`;
+                    {market.options.map((option: {label: string, odds: number}, index: number) => {
+                      const selectionKey = `${market.name}: ${option.label}`;
                       return (
                         <Button
                           key={index}
@@ -211,9 +226,9 @@ export default function UpcomingMatchCard({
                               ? "border-bet-primary bg-bet-primary/10 text-bet-primary" 
                               : "hover:border-bet-primary hover:bg-bet-primary/5"
                           )}
-                          onClick={() => addToBettingSlip(selectionKey, randomOdds)}
+                          onClick={() => addToBettingSlip(selectionKey, option.odds)}
                         >
-                          {option} <span className="ml-1 text-bet-primary">{randomOdds.toFixed(2)}</span>
+                          {option.label} <span className="ml-1 text-bet-primary">{option.odds.toFixed(2)}</span>
                         </Button>
                       );
                     })}

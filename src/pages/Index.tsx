@@ -18,7 +18,27 @@ const Index = () => {
   
   useEffect(() => {
     // Check auth status when component mounts and set state
-    setIsLoggedIn(isAuthenticated());
+    const checkAuth = () => {
+      setIsLoggedIn(isAuthenticated());
+    };
+    
+    // Check initially
+    checkAuth();
+    
+    // Set up a listener for storage events (for login/logout events)
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for auth changes within the same window
+    window.addEventListener('authChange', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authChange', handleStorageChange);
+    };
   }, []);
 
   return (

@@ -24,6 +24,9 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
   localStorage.setItem('userEmail', userData.email);
   localStorage.setItem('userProvider', provider);
   
+  // Dispatch a custom event to notify other components about auth state change
+  window.dispatchEvent(new Event('authChange'));
+  
   return userData;
 };
 
@@ -38,4 +41,7 @@ export const logout = () => {
   localStorage.removeItem('userName');
   localStorage.removeItem('userEmail');
   localStorage.removeItem('userProvider');
+  
+  // Dispatch a custom event to notify other components about auth state change
+  window.dispatchEvent(new Event('authChange'));
 };

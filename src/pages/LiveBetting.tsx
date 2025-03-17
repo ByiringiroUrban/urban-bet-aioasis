@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -204,6 +205,8 @@ export default function LiveBetting() {
                     drawOdds={match.drawOdds}
                     awayOdds={match.awayOdds}
                     isLive={match.isLive}
+                    isExpanded={expandedMatchId === match.id}
+                    onExpandMarket={handleExpandMarket}
                   />
                 ))
               ) : (
