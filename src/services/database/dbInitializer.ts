@@ -6,8 +6,8 @@ export const initializeDatabase = async () => {
   try {
     const db = await connectToDatabase();
     if (!db) {
-      console.warn('Using mock data - no database connection available');
-      // We'll return true to prevent errors and allow the app to continue with mock data
+      console.log('Browser environment detected - using mock data');
+      // We're in a browser, so we'll use mock data instead
       return true;
     }
     

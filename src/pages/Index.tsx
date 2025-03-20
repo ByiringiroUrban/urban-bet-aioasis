@@ -25,32 +25,35 @@ const Index = () => {
     // Initialize database connection when the app starts
     const initDB = async () => {
       try {
-        console.log("Initializing database connection...");
+        console.log("Initializing application data...");
         setIsLoading(true);
         const success = await initializeDatabase();
-        console.log(`Database initialization ${success ? 'successful' : 'failed'}`);
         
         if (success) {
           setDbInitialized(true);
+          console.log("Successfully initialized with mock data for browser environment");
+          
+          // Show a toast indicating we're using mock data in browser
           toast({
-            title: "Using Data",
-            description: "Successfully initialized with mock data for browser environment",
+            title: "Urban Bet Ready",
+            description: "Using mock data for demonstration purposes",
           });
         } else {
           toast({
             title: "Data Initialization",
-            description: "Using mock data - could not initialize database",
+            description: "Could not initialize data. Some features may not work correctly.",
             variant: "destructive",
           });
         }
       } catch (error) {
-        console.error("Error initializing database:", error);
+        console.error("Error initializing data:", error);
         toast({
-          title: "Database Error",
-          description: "There was a problem initializing data. Using mock data instead.",
+          title: "Initialization Error",
+          description: "There was a problem setting up the application. Please try again.",
           variant: "destructive",
         });
       } finally {
+        // Always end loading state, even if there's an error
         setIsLoading(false);
       }
     };
@@ -60,7 +63,7 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-bet-dark">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Loading Urban Bet...</h2>
           <p className="text-muted-foreground">Setting up your betting experience</p>
