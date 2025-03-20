@@ -8,7 +8,7 @@ import { predictionsService } from './predictionsService';
 import { BetRecord } from './database/types';
 
 // Re-export types for use in other files
-export { BetRecord } from './database/types';
+export type { BetRecord } from './database/types';
 
 // Export the main mongoService object that combines all services
 export const mongoService = {

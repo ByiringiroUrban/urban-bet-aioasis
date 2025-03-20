@@ -24,6 +24,7 @@ export interface UserData {
   balance?: number;
   currency?: 'USD' | 'RWF';
   provider?: string;
+  providerUserId?: string; // Added this field to fix the error
   createdAt?: Date;
   lastLogin?: Date;
   _id?: ObjectId;
