@@ -1,4 +1,6 @@
 
+import { mongoService } from '@/services/mongoService';
+
 // Mock function to simulate social provider auth
 export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
   console.log(`Authenticating with ${provider}...`);
@@ -18,14 +20,29 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
     provider
   };
   
-  // Store auth data in localStorage (in a real app, this would be more secure)
-  localStorage.setItem('userToken', `sample-jwt-token-${provider}-${userData.id}`);
-  localStorage.setItem('userName', userData.name);
-  localStorage.setItem('userEmail', userData.email);
-  localStorage.setItem('userProvider', provider);
+  // Save user to MongoDB
+  const result = await mongoService.saveUser({
+    name: userData.name,
+    email: userData.email,
+    provider: provider,
+    providerUserId: userData.id
+  });
   
-  // Dispatch a custom event to notify other components about auth state change
-  window.dispatchEvent(new CustomEvent('authChange'));
+  if (result.success) {
+    // Store auth data in localStorage (in a real app, this would be more secure)
+    localStorage.setItem('userToken', result.id || `sample-jwt-token-${provider}-${userData.id}`);
+    localStorage.setItem('userName', userData.name);
+    localStorage.setItem('userEmail', userData.email);
+    localStorage.setItem('userProvider', provider);
+    
+    // Dispatch a custom event to notify other components about auth state change
+    window.dispatchEvent(new CustomEvent('authChange'));
+    
+    return {
+      ...userData,
+      id: result.id || userData.id
+    };
+  }
   
   return userData;
 };
@@ -68,3 +85,4 @@ export const listenForAuthChanges = (callback: () => void) => {
     window.removeEventListener('storage', callback);
   };
 };
+

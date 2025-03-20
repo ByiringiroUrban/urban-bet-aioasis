@@ -10,25 +10,21 @@ import SportsBettingSection from "@/components/sections/SportsBettingSection";
 import CasinoGamesSection from "@/components/sections/CasinoGamesSection";
 import CallToActionSection from "@/components/sections/CallToActionSection";
 import { aiInsights, upcomingMatches, casinoGames } from "@/data/homePageData";
-import { isAuthenticated, listenForAuthChanges } from "@/utils/authUtils";
+import { useAuth } from "@/hooks/useAuth";
 import { Match } from "@/types";
+import { initializeDatabase } from "@/services/mongoService";
 
 const Index = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn } = useAuth();
   
   useEffect(() => {
-    // Check auth status when component mounts and set state
-    const checkAuth = () => {
-      setIsLoggedIn(isAuthenticated());
+    // Initialize database connection when the app starts
+    const initDB = async () => {
+      const success = await initializeDatabase();
+      console.log(`Database initialization ${success ? 'successful' : 'failed'}`);
     };
     
-    // Check initially
-    checkAuth();
-    
-    // Set up listener for auth changes
-    const cleanup = listenForAuthChanges(checkAuth);
-    
-    return cleanup;
+    initDB();
   }, []);
 
   return (
@@ -51,3 +47,4 @@ const Index = () => {
 };
 
 export default Index;
+
