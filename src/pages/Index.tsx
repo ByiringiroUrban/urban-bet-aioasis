@@ -19,25 +19,27 @@ const Index = () => {
   const { isLoggedIn } = useAuth();
   const { toast } = useToast();
   const [dbInitialized, setDbInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Initialize database connection when the app starts
     const initDB = async () => {
       try {
         console.log("Initializing database connection...");
+        setIsLoading(true);
         const success = await initializeDatabase();
         console.log(`Database initialization ${success ? 'successful' : 'failed'}`);
         
         if (success) {
           setDbInitialized(true);
           toast({
-            title: "Connected to Database",
-            description: "Successfully connected to MongoDB at localhost:27017",
+            title: "Using Data",
+            description: "Successfully initialized with mock data for browser environment",
           });
         } else {
           toast({
-            title: "Database Connection",
-            description: "Using mock data - could not connect to MongoDB",
+            title: "Data Initialization",
+            description: "Using mock data - could not initialize database",
             variant: "destructive",
           });
         }
@@ -45,14 +47,27 @@ const Index = () => {
         console.error("Error initializing database:", error);
         toast({
           title: "Database Error",
-          description: "There was a problem connecting to the database. Using mock data instead.",
+          description: "There was a problem initializing data. Using mock data instead.",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     
     initDB();
   }, [toast]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Loading Urban Bet...</h2>
+          <p className="text-muted-foreground">Setting up your betting experience</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
