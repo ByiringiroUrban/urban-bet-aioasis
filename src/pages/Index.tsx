@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Match } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { initializeDatabase } from "@/services/supabaseService";
+import { supabase } from "@/lib/supabase";
 
 const Index = () => {
   const { isLoggedIn } = useAuth();
@@ -22,11 +23,22 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Initialize database connection when the app starts
+    // Check Supabase connection and initialize database when the app starts
     const initDB = async () => {
       try {
         console.log("Initializing application data...");
         setIsLoading(true);
+        
+        // Test Supabase connection
+        const { data, error } = await supabase.from('sports').select('count');
+        
+        if (error) {
+          console.log('Using mock data due to Supabase connection error:', error.message);
+          // Continue with mock data initialization
+        } else {
+          console.log('Successfully connected to Supabase:', data);
+        }
+        
         const success = await initializeDatabase();
         
         if (success) {
@@ -40,16 +52,14 @@ const Index = () => {
         } else {
           toast({
             title: "Data Initialization",
-            description: "Could not initialize data. Some features may not work correctly.",
-            variant: "destructive",
+            description: "Using mock data for demonstration",
           });
         }
       } catch (error) {
         console.error("Error initializing data:", error);
         toast({
-          title: "Initialization Error",
-          description: "There was a problem setting up the application. Please try again.",
-          variant: "destructive",
+          title: "Using Demo Mode",
+          description: "Urban Bet is running with demonstration data",
         });
       } finally {
         // Always end loading state, even if there's an error

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { isAuthenticated, getCurrentUser, listenForAuthChanges } from '@/utils/authUtils';
+import { supabase, getCurrentUser, getCurrentSession } from '@/lib/supabase';
 import { mongoService } from '@/services/mongoService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,71 +14,75 @@ export interface User {
 }
 
 export const useAuth = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
-  const [user, setUser] = useState<User | null>(getCurrentUser());
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
-  // Fetch user data from MongoDB
+  // Fetch user data from Supabase
   const fetchUserData = async () => {
-    if (!isAuthenticated()) return;
-    
-    const basicUser = getCurrentUser();
-    if (!basicUser || !basicUser.token) return;
-    
     setIsLoading(true);
     try {
-      const userData = await mongoService.getUser(basicUser.token);
+      const session = await getCurrentSession();
       
-      if (userData) {
-        // Merge local storage data with MongoDB data
-        setUser({
-          ...basicUser,
-          balance: userData.balance || 0,
-          currency: userData.currency || 'RWF'
-        });
+      if (session.data.session) {
+        const supabaseUser = await getCurrentUser();
         
-        console.log('User data fetched successfully:', userData);
+        if (supabaseUser) {
+          // Get additional user data from our service
+          const userData = await mongoService.getUser(supabaseUser.id);
+          
+          setUser({
+            token: supabaseUser.id,
+            name: supabaseUser.user_metadata?.name || userData?.name || 'Urban Bet User',
+            email: supabaseUser.email,
+            provider: 'supabase',
+            balance: userData?.balance || 50000,
+            currency: userData?.currency || 'RWF'
+          });
+          
+          setIsLoggedIn(true);
+          console.log('User data fetched successfully:', userData);
+        } else {
+          console.log('No logged in user');
+          setIsLoggedIn(false);
+          setUser(null);
+        }
       } else {
-        console.warn('No user data found in database');
-        toast({
-          title: "Account Information",
-          description: "Your account details are being set up. Please complete your profile.",
-          duration: 5000,
-        });
+        setIsLoggedIn(false);
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
       toast({
-        title: "Error",
-        description: "Could not fetch your account information. Please try again later.",
+        title: "Authentication Error",
+        description: "Could not fetch your account information. Using guest mode.",
         variant: "destructive",
       });
+      setIsLoggedIn(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
   
   useEffect(() => {
-    const handleAuthChange = () => {
-      const isLoggedInNow = isAuthenticated();
-      setIsLoggedIn(isLoggedInNow);
-      setUser(getCurrentUser());
-      
-      if (isLoggedInNow) {
-        fetchUserData();
-      }
-    };
+    fetchUserData();
     
     // Set up listener for auth changes
-    const cleanup = listenForAuthChanges(handleAuthChange);
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_IN') {
+        fetchUserData();
+      } else if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    });
     
-    // Initial fetch
-    if (isLoggedIn) {
-      fetchUserData();
-    }
-    
-    return cleanup;
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
   
   return {

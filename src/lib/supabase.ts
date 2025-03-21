@@ -2,8 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // These should be the public keys only, safe to use in browser
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://urbanbet.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYmFuYmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTAwMTcsImV4cCI6MjAzMTg2NjAxN30.gOyFQ_Fw1jG7bWW1rLYKIqaCfZ8n6LDIXWXGQmM0H8c';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
