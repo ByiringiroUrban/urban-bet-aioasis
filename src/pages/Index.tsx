@@ -12,8 +12,8 @@ import CallToActionSection from "@/components/sections/CallToActionSection";
 import { aiInsights, upcomingMatches, casinoGames } from "@/data/homePageData";
 import { useAuth } from "@/hooks/useAuth";
 import { Match } from "@/types";
-import { initializeDatabase } from "@/services/mongoService";
 import { useToast } from "@/hooks/use-toast";
+import { initializeDatabase } from "@/services/supabaseService";
 
 const Index = () => {
   const { isLoggedIn } = useAuth();
@@ -31,12 +31,11 @@ const Index = () => {
         
         if (success) {
           setDbInitialized(true);
-          console.log("Successfully initialized with mock data for browser environment");
+          console.log("Successfully initialized with data");
           
-          // Show a toast indicating we're using mock data in browser
           toast({
             title: "Urban Bet Ready",
-            description: "Using mock data for demonstration purposes",
+            description: "Welcome to Urban Bet!",
           });
         } else {
           toast({
