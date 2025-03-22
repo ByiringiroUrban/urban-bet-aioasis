@@ -40,11 +40,12 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
     
     // Create a proper SaveUserResult object with null checks
     const result: SaveUserResult = {
-      success: typeof saveResult === 'boolean' ? saveResult : false
+      success: typeof saveResult === 'object' && saveResult !== null ? true : 
+               typeof saveResult === 'boolean' ? saveResult : false
     };
     
     // Only add id if saveResult is an object with an id property
-    if (saveResult && typeof saveResult === 'object' && 'id' in saveResult && saveResult.id) {
+    if (saveResult && typeof saveResult === 'object' && saveResult !== null && 'id' in saveResult && saveResult.id) {
       result.id = String(saveResult.id);
     }
     
