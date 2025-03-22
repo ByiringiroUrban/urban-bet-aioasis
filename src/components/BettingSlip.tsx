@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Trash2, X, ChevronDown, ChevronUp, CircleDollarSign, Info } from "lucid
 import { useBetting } from "@/contexts/BettingContext";
 import { cn } from "@/lib/utils";
 import { isAuthenticated } from "@/utils/authUtils";
-import { toast } from "react-toastify";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BettingSlip() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function BettingSlip() {
     setCurrency,
     convertAmount 
   } = useBetting();
+  const { toast } = useToast();
 
   const toggleOpen = () => setIsOpen(!isOpen);
 
@@ -37,24 +39,30 @@ export default function BettingSlip() {
 
   const handlePlaceBet = async () => {
     if (!isAuthenticated()) {
-      toast.error("Please log in to place a bet", {
+      toast({
+        title: "Please log in to place a bet",
         description: "Create an account or log in to place bets.",
-        action: {
-          label: "Login",
-          onClick: () => window.location.href = "/login"
-        }
+        variant: "destructive",
       });
       return;
     }
     
     if (parseFloat(betAmount) <= 0 || isNaN(parseFloat(betAmount))) {
-      toast.error("Please enter a valid bet amount");
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid bet amount",
+        variant: "destructive",
+      });
       return;
     }
     
     const minBet = currency === "RWF" ? 1000 : 1;
     if (parseFloat(betAmount) < minBet) {
-      toast.error(`Minimum bet amount is ${currency === "RWF" ? "RWF 1,000" : "$1"}`);
+      toast({
+        title: "Minimum bet required",
+        description: `Minimum bet amount is ${currency === "RWF" ? "RWF 1,000" : "$1"}`,
+        variant: "destructive",
+      });
       return;
     }
     

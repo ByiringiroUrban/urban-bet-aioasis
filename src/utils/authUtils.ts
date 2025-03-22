@@ -1,4 +1,11 @@
+
 import { mongoService } from '@/services/mongoService';
+
+// Interface for the return type of saveUser
+interface SaveUserResult {
+  success: boolean;
+  id?: string;
+}
 
 // Mock function to simulate social provider auth
 export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
@@ -21,14 +28,14 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
   
   try {
     // Save user to MongoDB
-    const result = await mongoService.saveUser({
+    const result: SaveUserResult = await mongoService.saveUser({
       name: userData.name,
       email: userData.email,
       provider: provider,
       providerUserId: userData.id,
       balance: 50000, // Starting balance in RWF
       currency: 'RWF'
-    });
+    }) as SaveUserResult;
     
     if (result.success) {
       // Store auth data in localStorage (in a real app, this would be more secure)
