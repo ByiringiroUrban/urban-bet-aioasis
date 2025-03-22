@@ -1,4 +1,3 @@
-
 import { mongoService } from '@/services/mongoService';
 
 // Interface for the return type of saveUser
@@ -41,8 +40,8 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
     const result: SaveUserResult = {
       success: typeof saveResult === 'boolean' ? saveResult : false,
       // Safely access id property when saveResult is an object and not null
-      id: (typeof saveResult === 'object' && saveResult !== null && 'id' in saveResult) ? 
-          saveResult.id : undefined
+      id: (typeof saveResult === 'object' && saveResult !== null && 'id' in saveResult && saveResult.id) ? 
+          String(saveResult.id) : undefined
     };
     
     if (result.success) {
