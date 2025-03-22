@@ -8,11 +8,19 @@ export const saveBet = async (betData: Omit<BetRecord, 'id'>): Promise<{ success
     // Try to save to Supabase
     const { data, error } = await supabase
       .from('bets')
-      .insert([betData])
+      .insert([{
+        user_id: betData.userId,
+        items: betData.items,
+        total_odds: betData.totalOdds,
+        amount: betData.amount,
+        potential_winnings: betData.potentialWinnings,
+        status: betData.status,
+        currency: betData.currency || 'RWF',
+      }])
       .select('id');
     
     if (error) {
-      console.log('Using mock bet saving');
+      console.log('Error saving bet:', error.message);
       // Return success with mock id
       await new Promise(resolve => setTimeout(resolve, 800));
       return {
@@ -37,11 +45,11 @@ export const getBetHistory = async (userId: string): Promise<BetRecord[]> => {
     const { data, error } = await supabase
       .from('bets')
       .select('*')
-      .eq('userId', userId)
-      .order('timestamp', { ascending: false });
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
     
     if (error || !data || data.length === 0) {
-      console.log('Using mock bet history');
+      console.log('Using mock bet history:', error?.message || 'No data found');
       // Return mock data
       await new Promise(resolve => setTimeout(resolve, 600));
       return [
@@ -104,8 +112,18 @@ export const getBetHistory = async (userId: string): Promise<BetRecord[]> => {
       ];
     }
     
-    // Return actual data
-    return data as BetRecord[];
+    // Convert Supabase data to BetRecord format
+    return data.map(bet => ({
+      id: bet.id,
+      userId: bet.user_id,
+      items: bet.items as any[],
+      totalOdds: bet.total_odds,
+      amount: bet.amount,
+      potentialWinnings: bet.potential_winnings,
+      timestamp: bet.created_at,
+      status: bet.status as 'pending' | 'won' | 'lost' | 'cancelled',
+      currency: bet.currency
+    }));
   } catch (error) {
     console.error('Error fetching bet history:', error);
     return [];

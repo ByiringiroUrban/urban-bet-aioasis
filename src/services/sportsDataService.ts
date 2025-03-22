@@ -1,56 +1,72 @@
 
 import { supabase } from '@/lib/supabase';
-import { Market } from './database/types';
+import { SportEvent, Market } from './database/types';
 
-// Mock data for initial app state
-const mockSports = ['Football', 'Basketball', 'Tennis', 'Rugby', 'Cricket', 'eSports'];
-const mockMarkets = [
-  { id: 'm1', name: 'Match Result', options: ['Home Win', 'Draw', 'Away Win'] },
-  { id: 'm2', name: 'Both Teams To Score', options: ['Yes', 'No'] },
-  { id: 'm3', name: 'Over/Under 2.5 Goals', options: ['Over', 'Under'] },
-  { id: 'm4', name: 'First Goal Scorer', options: ['Player 1', 'Player 2', 'No Goal'] },
-];
-
-// Sports related functions
-export const getSports = async (): Promise<string[]> => {
+// Get list of sports
+export const getSports = async (): Promise<{ id: string; name: string }[]> => {
   try {
-    // Try to fetch from Supabase
-    const { data, error } = await supabase.from('sports').select('name');
-    
-    if (error || !data || data.length === 0) {
-      console.log('Using mock sports data');
-      // Return mock data
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return mockSports;
+    const { data, error } = await supabase
+      .from('sports')
+      .select('id, name')
+      .eq('active', true)
+      .order('display_order', { ascending: true });
+      
+    if (error) {
+      throw error;
     }
     
-    // Return actual data from Supabase
-    return data.map(sport => sport.name);
+    return data || [];
   } catch (error) {
     console.error('Error fetching sports:', error);
-    return mockSports;
+    // Return mock data
+    return [
+      { id: '1', name: 'Football' },
+      { id: '2', name: 'Basketball' },
+      { id: '3', name: 'Tennis' },
+      { id: '4', name: 'Rugby' },
+      { id: '5', name: 'Cricket' },
+      { id: '6', name: 'eSports' }
+    ];
   }
 };
 
-export const getMarkets = async (eventId: string): Promise<Market[]> => {
+// Get available markets for an event
+export const getMarkets = async (eventId?: string): Promise<Market[]> => {
+  if (!eventId) {
+    return [
+      { id: '1', name: 'Match Winner', options: ['Home', 'Draw', 'Away'] },
+      { id: '2', name: 'Over/Under 2.5 Goals', options: ['Over', 'Under'] },
+      { id: '3', name: 'Both Teams to Score', options: ['Yes', 'No'] }
+    ];
+  }
+  
   try {
-    // Try to fetch from Supabase
     const { data, error } = await supabase
       .from('markets')
-      .select('*')
-      .eq('eventId', eventId);
-    
+      .select('id, name, options')
+      .eq('event_id', eventId);
+      
     if (error || !data || data.length === 0) {
-      console.log('Using mock markets data');
-      // Return mock data
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockMarkets;
+      // Return mock data for specific event
+      return [
+        { id: '1', name: 'Match Winner', options: ['Home', 'Draw', 'Away'], eventId },
+        { id: '2', name: 'Over/Under 2.5 Goals', options: ['Over', 'Under'], eventId },
+        { id: '3', name: 'Both Teams to Score', options: ['Yes', 'No'], eventId }
+      ];
     }
     
-    // Return actual data
-    return data;
+    return data.map(market => ({
+      id: market.id,
+      name: market.name,
+      options: market.options,
+      eventId
+    }));
   } catch (error) {
     console.error('Error fetching markets:', error);
-    return mockMarkets;
+    return [
+      { id: '1', name: 'Match Winner', options: ['Home', 'Draw', 'Away'], eventId },
+      { id: '2', name: 'Over/Under 2.5 Goals', options: ['Over', 'Under'], eventId },
+      { id: '3', name: 'Both Teams to Score', options: ['Yes', 'No'], eventId }
+    ];
   }
 };

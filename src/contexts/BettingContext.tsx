@@ -1,8 +1,8 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { toast } from "sonner";
-import { mongoService } from "@/services/mongoService";
 import { isAuthenticated } from "@/utils/authUtils";
+import { saveBet } from "@/services/bettingService";
 
 export interface BetItem {
   id: string;
@@ -88,11 +88,12 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
           ? convertAmount(amount * totalOdds, "USD", "RWF") 
           : amount * totalOdds,
         timestamp: new Date().toISOString(),
-        status: 'pending' as const
+        status: 'pending' as const,
+        currency: currency
       };
 
-      // Save bet to MongoDB
-      const result = await mongoService.saveBet(betData);
+      // Save bet to Supabase
+      const result = await saveBet(betData);
       
       if (result.success) {
         toast.success("Bet placed successfully!");

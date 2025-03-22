@@ -10,7 +10,7 @@ export const initializeDatabase = async (): Promise<boolean> => {
     const { data, error } = await supabase.from('sports').select('count');
     
     if (error) {
-      console.log('Error connecting to Supabase or table not found, using mock data:', error.message);
+      console.log('Error connecting to Supabase or table not found:', error.message);
       // Return true to continue with mock data
       return true;
     }

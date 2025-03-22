@@ -2,58 +2,76 @@
 import { supabase } from '@/lib/supabase';
 import { UserData } from './database/types';
 
-// User related functions
-export const saveUser = async (userData: UserData): Promise<{ success: boolean; id?: string }> => {
+// Save or update user profile
+export const saveUser = async (userData: UserData): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .upsert([userData], { onConflict: 'email' })
-      .select('id');
-      
-    if (error) {
-      console.error('Error saving user to Supabase:', error);
-      return { success: false };
+    if (!userData.id) {
+      console.error('User ID is required');
+      return false;
     }
-    
-    return {
-      success: true,
-      id: data?.[0]?.id
-    };
+
+    // Check if user exists in profiles
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userData.id)
+      .single();
+
+    if (existingUser) {
+      // Update existing user
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: userData.name,
+          email: userData.email,
+          currency: userData.currency,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userData.id);
+
+      if (error) throw error;
+    } else {
+      // Insert new user
+      const { error } = await supabase
+        .from('profiles')
+        .insert([{
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          balance: userData.balance || 50000,
+          currency: userData.currency || 'RWF',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error saving user:', error);
-    return { success: false };
+    return false;
   }
 };
 
+// Get user profile by ID
 export const getUser = async (userId: string): Promise<UserData | null> => {
   try {
-    // Try to fetch from Supabase
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    
-    if (error || !data) {
-      console.log('Using mock user data');
-      // Return mock data
-      return {
-        id: userId,
-        name: 'Demo User',
-        email: 'user@example.com',
-        balance: 50000, // RWF
-        currency: 'RWF'
-      };
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        console.log('User not found, will create profile on first login');
+        return null;
+      }
+      throw error;
     }
-    
-    // Return actual data
-    return {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      balance: data.balance || 0,
-      currency: data.currency || 'RWF'
-    };
+
+    return data as UserData;
   } catch (error) {
     console.error('Error fetching user:', error);
     return null;

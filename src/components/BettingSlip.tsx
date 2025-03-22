@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Trash2, X, ChevronDown, ChevronUp, CircleDollarSign, Info } from "lucid
 import { useBetting } from "@/contexts/BettingContext";
 import { cn } from "@/lib/utils";
 import { isAuthenticated } from "@/utils/authUtils";
+import { toast } from "react-toastify";
 
 export default function BettingSlip() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,13 +36,34 @@ export default function BettingSlip() {
   };
 
   const handlePlaceBet = async () => {
+    if (!isAuthenticated()) {
+      toast.error("Please log in to place a bet", {
+        description: "Create an account or log in to place bets.",
+        action: {
+          label: "Login",
+          onClick: () => window.location.href = "/login"
+        }
+      });
+      return;
+    }
+    
+    if (parseFloat(betAmount) <= 0 || isNaN(parseFloat(betAmount))) {
+      toast.error("Please enter a valid bet amount");
+      return;
+    }
+    
+    const minBet = currency === "RWF" ? 1000 : 1;
+    if (parseFloat(betAmount) < minBet) {
+      toast.error(`Minimum bet amount is ${currency === "RWF" ? "RWF 1,000" : "$1"}`);
+      return;
+    }
+    
     await placeBet(parseFloat(betAmount));
     setBetAmount("");
   };
 
   const toggleCurrency = () => {
     setCurrency(currency === "USD" ? "RWF" : "USD");
-    // Recalculate bet amount if needed
     if (betAmount) {
       const amount = parseFloat(betAmount);
       if (!isNaN(amount)) {
@@ -51,7 +72,6 @@ export default function BettingSlip() {
     }
   };
 
-  // Auto-open betting slip when items are added
   useEffect(() => {
     if (betItems.length > 0 && !isOpen) {
       setIsOpen(true);
@@ -60,7 +80,6 @@ export default function BettingSlip() {
 
   return (
     <div className="fixed bottom-0 right-0 z-40 w-full md:w-80 md:mr-4 md:mb-4 md:rounded-lg glass border border-bet-primary/30 shadow-lg transition-all duration-300">
-      {/* Mobile Toggle Header */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer md:hidden bg-bet-dark-accent rounded-t-lg"
         onClick={toggleOpen}
@@ -77,7 +96,6 @@ export default function BettingSlip() {
         {isOpen ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
       </div>
 
-      {/* Content (always visible on desktop, toggleable on mobile) */}
       <div className={`${isOpen ? 'block' : 'hidden md:block'}`}>
         <CardHeader className="hidden md:block px-4 py-3 border-b border-border bg-bet-dark-accent rounded-t-lg">
           <div className="flex items-center justify-between">
