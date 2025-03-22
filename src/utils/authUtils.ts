@@ -1,3 +1,4 @@
+
 import { mongoService } from '@/services/mongoService';
 
 // Interface for the return type of saveUser
@@ -36,13 +37,15 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
       currency: 'RWF'
     });
     
-    // Create a proper SaveUserResult object
+    // Create a proper SaveUserResult object with null checks
     const result: SaveUserResult = {
-      success: typeof saveResult === 'boolean' ? saveResult : false,
-      // Safely access id property when saveResult is an object and not null
-      id: (typeof saveResult === 'object' && saveResult !== null && 'id' in saveResult && saveResult.id) ? 
-          String(saveResult.id) : undefined
+      success: typeof saveResult === 'boolean' ? saveResult : false
     };
+    
+    // Only add id if saveResult is an object with an id property
+    if (saveResult && typeof saveResult === 'object' && 'id' in saveResult && saveResult.id) {
+      result.id = String(saveResult.id);
+    }
     
     if (result.success) {
       // Store auth data in localStorage (in a real app, this would be more secure)
