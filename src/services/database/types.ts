@@ -24,7 +24,7 @@ export interface UserData {
   balance?: number;
   currency?: 'USD' | 'RWF';
   provider?: string;
-  providerUserId?: string; // Added this field to fix the error
+  providerUserId?: string;
   createdAt?: Date;
   lastLogin?: Date;
   _id?: ObjectId;
@@ -53,6 +53,9 @@ export interface SportEvent {
   drawOdds?: number;
   awayOdds: number;
   isLive?: boolean;
+  sportId?: string; // Added missing property
+  country?: string; // Added missing property
+  startTime?: string; // Added missing property
 }
 
 export interface Market {

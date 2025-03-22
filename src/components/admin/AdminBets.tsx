@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +89,7 @@ export default function AdminBets() {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'won':
-        return "success";
+        return "secondary"; // Changed from "success" to "secondary"
       case 'lost':
         return "destructive";
       case 'cancelled':
@@ -196,11 +196,13 @@ export default function AdminBets() {
                               </TableHeader>
                               <TableBody>
                                 {bet.items.map((item, idx) => (
-                                  <TableRow key={idx}>
-                                    <TableCell>{item.event}</TableCell>
-                                    <TableCell>{item.selection}</TableCell>
-                                    <TableCell>{item.odds.toFixed(2)}</TableCell>
-                                  </TableRow>
+                                  <React.Fragment key={idx}>
+                                    <TableRow>
+                                      <TableCell>{item.event}</TableCell>
+                                      <TableCell>{item.selection}</TableCell>
+                                      <TableCell>{item.odds.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                  </React.Fragment>
                                 ))}
                               </TableBody>
                             </Table>
