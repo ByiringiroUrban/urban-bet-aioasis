@@ -28,14 +28,20 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
   
   try {
     // Save user to MongoDB
-    const result: SaveUserResult = await mongoService.saveUser({
+    const saveResult = await mongoService.saveUser({
       name: userData.name,
       email: userData.email,
       provider: provider,
       providerUserId: userData.id,
       balance: 50000, // Starting balance in RWF
       currency: 'RWF'
-    }) as SaveUserResult;
+    });
+    
+    // Create a proper SaveUserResult object
+    const result: SaveUserResult = {
+      success: typeof saveResult === 'boolean' ? saveResult : false,
+      id: typeof saveResult === 'object' && saveResult !== null ? saveResult.id : undefined
+    };
     
     if (result.success) {
       // Store auth data in localStorage (in a real app, this would be more secure)
