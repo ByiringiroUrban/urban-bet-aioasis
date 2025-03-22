@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Initialize the database with sample data
 export const initializeDatabase = async (): Promise<boolean> => {

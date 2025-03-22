@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { AIprediction } from './database/types';
 
 // Get AI predictions for a user
@@ -19,7 +19,7 @@ export const getAIPredictions = async (userId: string): Promise<AIprediction[]> 
           match: 'Liverpool vs Manchester United',
           prediction: 'Liverpool to win',
           confidence: 78,
-          analysis: 'Liverpool's strong home record and current form gives them the edge.',
+          analysis: 'Liverpool\'s strong home record and current form gives them the edge.',
           trend: 'upward',
           odds: '1.85',
           userId
@@ -57,7 +57,7 @@ export const getAIPredictions = async (userId: string): Promise<AIprediction[]> 
         match: 'Liverpool vs Manchester United',
         prediction: 'Liverpool to win',
         confidence: 78,
-        analysis: 'Liverpool's strong home record and current form gives them the edge.',
+        analysis: 'Liverpool\'s strong home record and current form gives them the edge.',
         trend: 'upward',
         odds: '1.85',
         userId
