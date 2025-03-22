@@ -1,5 +1,5 @@
-
 import { mongoService } from '@/services/mongoService';
+import { supabase } from '@/lib/supabase';
 
 // Interface for the return type of saveUser
 interface SaveUserResult {
@@ -119,4 +119,49 @@ export const listenForAuthChanges = (callback: () => void) => {
     window.removeEventListener('authChange', callback);
     window.removeEventListener('storage', callback);
   };
+};
+
+// Check if current user is an admin
+export const isAdmin = async (): Promise<boolean> => {
+  try {
+    // First check if user is authenticated
+    if (!isAuthenticated()) {
+      return false;
+    }
+    
+    const { data, error } = await supabase.rpc('has_role', {
+      '_role': 'admin'
+    });
+    
+    if (error) {
+      console.error("Error checking admin status:", error);
+      return false;
+    }
+    
+    return data === true;
+  } catch (error) {
+    console.error("Error in admin check:", error);
+    return false;
+  }
+};
+
+// Function to add a user as an admin (only callable by admins)
+export const addAdmin = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .insert([
+        { user_id: userId, role: 'admin' }
+      ]);
+    
+    if (error) {
+      console.error("Error adding admin:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in addAdmin:", error);
+    return false;
+  }
 };

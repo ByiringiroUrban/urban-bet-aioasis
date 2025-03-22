@@ -16,6 +16,7 @@ import LiveBetting from "./pages/LiveBetting";
 import NotFound from "./pages/NotFound";
 import Account from "./pages/Account";
 import Wallet from "./pages/Wallet";
+import Admin from "./pages/Admin";
 import ResponsibleGambling from "./pages/ResponsibleGambling";
 import FAQ from "./pages/FAQ";
 import Terms from "./pages/Terms";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/live" element={<LiveBetting />} />
             <Route path="/account" element={<Account />} />
             <Route path="/wallet" element={<Wallet />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/responsible-gambling" element={<ResponsibleGambling />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/terms" element={<Terms />} />
