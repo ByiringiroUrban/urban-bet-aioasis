@@ -1,3 +1,4 @@
+
 import { mongoService } from '@/services/mongoService';
 import { supabase } from '@/lib/supabase';
 
@@ -42,15 +43,17 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
       success: false
     };
     
-    // Properly handle saveResult which could be null
-    if (saveResult !== null && typeof saveResult === 'object') {
-      result.success = true;
-      // Only add id if saveResult has an id property
-      if ('id' in saveResult && saveResult.id) {
-        result.id = String(saveResult.id);
+    // Handle various types of saveResult with proper null checking
+    if (saveResult !== null) {
+      if (typeof saveResult === 'object') {
+        result.success = true;
+        // Only add id if saveResult has an id property
+        if (saveResult && 'id' in saveResult && saveResult.id) {
+          result.id = String(saveResult.id);
+        }
+      } else if (typeof saveResult === 'boolean') {
+        result.success = saveResult;
       }
-    } else if (typeof saveResult === 'boolean') {
-      result.success = saveResult;
     }
     
     if (result.success) {
