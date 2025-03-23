@@ -24,6 +24,14 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateEmail = (email: string): boolean => {
+    return emailRegex.test(email);
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +50,12 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
       return;
     }
     
+    if (!validateEmail(registerEmail)) {
+      setError("Please enter a valid email address");
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
       console.log("Register attempt with:", { registerName, registerEmail, registerPassword, agreeTerms });
       
@@ -52,6 +66,7 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
           data: {
             name: registerName,
           },
+          emailRedirectTo: window.location.origin + "/login"
         },
       });
       
@@ -65,6 +80,18 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
           variant: "destructive",
         });
         
+        return;
+      }
+      
+      // Check if user or session is null (should not happen but handle it anyway)
+      if (!data.user) {
+        setError("Something went wrong during registration. Please try again.");
+        return;
+      }
+      
+      // Check email confirmation status
+      if (data.user.identities && data.user.identities.length === 0) {
+        setError("This email is already registered. Please try logging in or use a different email.");
         return;
       }
       
@@ -88,6 +115,47 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
     }
   };
 
+  const handleResendConfirmation = async () => {
+    if (!registerEmail || !validateEmail(registerEmail)) {
+      setError("Please enter a valid email address to resend confirmation");
+      return;
+    }
+
+    setResendingEmail(true);
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: registerEmail,
+        options: {
+          emailRedirectTo: window.location.origin + "/login"
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Confirmation email sent",
+        description: "Please check your inbox (and spam folder) for the confirmation email.",
+      });
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to resend confirmation email.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
   return (
@@ -97,7 +165,7 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
           <div className="text-green-500 font-medium text-lg">Registration Successful!</div>
           <p>
             A confirmation email has been sent to <strong>{registerEmail}</strong>. 
-            Please check your inbox and click on the confirmation link to activate your account.
+            Please check your inbox and spam folder and click on the confirmation link to activate your account.
           </p>
           <div className="mt-4">
             <Button 
@@ -113,36 +181,10 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
             <button 
               type="button"
               className="text-bet-primary hover:underline ml-1"
-              onClick={async () => {
-                try {
-                  const { error } = await supabase.auth.resend({
-                    type: 'signup',
-                    email: registerEmail,
-                  });
-                  
-                  if (error) {
-                    toast({
-                      title: "Error",
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  
-                  toast({
-                    title: "Email sent",
-                    description: "Confirmation email has been resent.",
-                  });
-                } catch (e) {
-                  toast({
-                    title: "Error",
-                    description: "Failed to resend confirmation email.",
-                    variant: "destructive",
-                  });
-                }
-              }}
+              onClick={handleResendConfirmation}
+              disabled={resendingEmail}
             >
-              resend the confirmation email
+              {resendingEmail ? "Sending..." : "resend the confirmation email"}
             </button>
           </p>
         </div>
@@ -168,12 +210,15 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
               <Input
                 type="email"
                 placeholder="Email Address"
-                className="pl-10"
+                className={`pl-10 ${!validateEmail(registerEmail) && registerEmail ? 'border-red-500' : ''}`}
                 value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
                 required
               />
             </div>
+            {!validateEmail(registerEmail) && registerEmail && (
+              <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
+            )}
           </div>
           
           <div>
@@ -195,7 +240,9 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Password must be at least 6 characters</p>
+            <p className={`text-xs mt-1 ${registerPassword.length > 0 && registerPassword.length < 6 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              Password must be at least 6 characters
+            </p>
           </div>
           
           {error && (
@@ -228,7 +275,7 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
           <Button 
             type="submit" 
             className="w-full bg-bet-primary hover:bg-bet-primary/90"
-            disabled={!agreeTerms || isSubmitting}
+            disabled={!agreeTerms || isSubmitting || !validateEmail(registerEmail) || registerPassword.length < 6}
           >
             {isSubmitting ? "Creating Account..." : "Create Account"} 
             {!isSubmitting && <ArrowRight size={16} className="ml-1" />}

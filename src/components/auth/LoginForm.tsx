@@ -21,11 +21,25 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [error, setError] = useState("");
+  const [resendingEmail, setResendingEmail] = useState(false);
+
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateEmail = (email: string): boolean => {
+    return emailRegex.test(email);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+    
+    if (!validateEmail(loginEmail)) {
+      setError("Please enter a valid email address");
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       console.log("Login attempt with:", { loginEmail, loginPassword });
@@ -44,7 +58,7 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
           
           toast({
             title: "Email not confirmed",
-            description: "Please check your inbox for the confirmation email and click the link to verify your account.",
+            description: "Please check your inbox and spam folder for the confirmation email and click the link to verify your account.",
             variant: "destructive",
           });
         } else {
@@ -84,15 +98,20 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
   };
 
   const handleResendConfirmation = async () => {
-    if (!loginEmail) {
-      setError("Please enter your email address to resend confirmation");
+    if (!loginEmail || !validateEmail(loginEmail)) {
+      setError("Please enter a valid email address to resend confirmation");
       return;
     }
+
+    setResendingEmail(true);
 
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: loginEmail,
+        options: {
+          emailRedirectTo: window.location.origin + "/login"
+        }
       });
 
       if (error) {
@@ -106,7 +125,7 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
 
       toast({
         title: "Confirmation email sent",
-        description: "Please check your inbox for the confirmation email.",
+        description: "Please check your inbox and spam folder for the confirmation email.",
       });
     } catch (error) {
       console.error("Error resending confirmation:", error);
@@ -115,6 +134,8 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
         description: "Failed to resend confirmation email. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setResendingEmail(false);
     }
   };
 
@@ -129,12 +150,15 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
             <Input
               type="email"
               placeholder="Email Address"
-              className="pl-10"
+              className={`pl-10 ${!validateEmail(loginEmail) && loginEmail ? 'border-red-500' : ''}`}
               value={loginEmail}
               onChange={(e) => setLoginEmail(e.target.value)}
               required
             />
           </div>
+          {!validateEmail(loginEmail) && loginEmail && (
+            <p className="text-xs text-red-500 mt-1">Please enter a valid email address</p>
+          )}
         </div>
         
         <div>
@@ -166,8 +190,9 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
                 type="button" 
                 onClick={handleResendConfirmation}
                 className="ml-2 text-bet-primary hover:underline"
+                disabled={resendingEmail}
               >
-                Resend confirmation email
+                {resendingEmail ? "Sending..." : "Resend confirmation email"}
               </button>
             )}
           </div>
@@ -191,7 +216,7 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
         <Button 
           type="submit" 
           className="w-full bg-bet-primary hover:bg-bet-primary/90"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !validateEmail(loginEmail) || !loginPassword}
         >
           {isSubmitting ? "Logging in..." : "Log In"} 
           {!isSubmitting && <ArrowRight size={16} className="ml-1" />}
