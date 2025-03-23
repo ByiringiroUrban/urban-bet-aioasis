@@ -48,7 +48,7 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
       if (typeof saveResult === 'object') {
         result.success = true;
         // Only add id if saveResult has an id property
-        if (saveResult && 'id' in saveResult && saveResult.id) {
+        if (saveResult && typeof saveResult === 'object' && 'id' in saveResult && saveResult.id) {
           result.id = String(saveResult.id);
         }
       } else if (typeof saveResult === 'boolean') {
