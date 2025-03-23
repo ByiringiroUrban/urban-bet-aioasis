@@ -45,7 +45,7 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
     
     // Carefully check saveResult type and properties
     if (saveResult !== null) {
-      if (typeof saveResult === 'object') {
+      if (typeof saveResult === 'object' && saveResult !== null) {
         result.success = true;
         // Only add id if saveResult has an id property
         if ('id' in saveResult && saveResult.id) {
