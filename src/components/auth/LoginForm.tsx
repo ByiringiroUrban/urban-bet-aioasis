@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface LoginFormProps {
   isSubmitting: boolean;
@@ -19,29 +20,47 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
   const [showPassword, setShowPassword] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
     
     try {
       console.log("Login attempt with:", { loginEmail, loginPassword });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
       
-      localStorage.setItem("userToken", "sample-jwt-token");
-      localStorage.setItem("userEmail", loginEmail);
+      if (error) {
+        console.error("Login error:", error.message);
+        setError(error.message);
+        
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        
+        return;
+      }
       
       toast({
         title: "Login successful!",
         description: "Welcome back to Urban Bet.",
       });
       
+      // The user session will be handled by useAuth hook, which listens to auth state changes
       navigate("/dashboard");
     } catch (error) {
+      console.error("Unexpected error during login:", error);
+      
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -88,6 +107,12 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
             </button>
           </div>
         </div>
+        
+        {error && (
+          <div className="text-red-500 text-sm">
+            {error}
+          </div>
+        )}
         
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

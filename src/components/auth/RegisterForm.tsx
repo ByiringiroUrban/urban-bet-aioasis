@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface RegisterFormProps {
   isSubmitting: boolean;
@@ -21,30 +22,58 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [error, setError] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
+    
+    if (!agreeTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy");
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       console.log("Register attempt with:", { registerName, registerEmail, registerPassword, agreeTerms });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signUp({
+        email: registerEmail,
+        password: registerPassword,
+        options: {
+          data: {
+            name: registerName,
+          },
+        },
+      });
       
-      localStorage.setItem("userToken", "sample-jwt-token");
-      localStorage.setItem("userName", registerName);
-      localStorage.setItem("userEmail", registerEmail);
+      if (error) {
+        console.error("Registration error:", error.message);
+        setError(error.message);
+        
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        
+        return;
+      }
       
       toast({
         title: "Registration successful!",
         description: "Welcome to Urban Bet. Your account has been created.",
       });
       
+      // The user session will be handled by useAuth hook, which listens to auth state changes
       navigate("/dashboard");
     } catch (error) {
+      console.error("Unexpected error during registration:", error);
+      
       toast({
         title: "Registration failed",
-        description: "Please check your information and try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -105,6 +134,12 @@ export default function RegisterForm({ isSubmitting, setIsSubmitting }: Register
             </button>
           </div>
         </div>
+        
+        {error && (
+          <div className="text-red-500 text-sm">
+            {error}
+          </div>
+        )}
         
         <div className="flex items-center space-x-2">
           <Checkbox 

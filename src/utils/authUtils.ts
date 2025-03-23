@@ -39,14 +39,21 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
     });
     
     // Create a proper SaveUserResult object with null checks
-    const result: SaveUserResult = {
-      success: saveResult !== null && typeof saveResult === 'object' ? true : 
-               typeof saveResult === 'boolean' ? saveResult : false
+    let result: SaveUserResult = {
+      success: false
     };
     
-    // Only add id if saveResult is an object with an id property
-    if (saveResult !== null && typeof saveResult === 'object' && 'id' in saveResult && saveResult.id) {
-      result.id = String(saveResult.id);
+    // Carefully check saveResult type and properties
+    if (saveResult !== null) {
+      if (typeof saveResult === 'object') {
+        result.success = true;
+        // Only add id if saveResult has an id property
+        if ('id' in saveResult && saveResult.id) {
+          result.id = String(saveResult.id);
+        }
+      } else if (typeof saveResult === 'boolean') {
+        result.success = saveResult;
+      }
     }
     
     if (result.success) {
@@ -90,14 +97,25 @@ export const isAuthenticated = () => {
 };
 
 // Logout function
-export const logout = () => {
-  localStorage.removeItem('userToken');
-  localStorage.removeItem('userName');
-  localStorage.removeItem('userEmail');
-  localStorage.removeItem('userProvider');
-  
-  // Dispatch a custom event to notify other components about auth state change
-  window.dispatchEvent(new CustomEvent('authChange'));
+export const logout = async () => {
+  try {
+    // First try to sign out from Supabase
+    await supabase.auth.signOut();
+    
+    // Then clear local storage
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userProvider');
+    
+    // Dispatch a custom event to notify other components about auth state change
+    window.dispatchEvent(new CustomEvent('authChange'));
+    
+    return true;
+  } catch (error) {
+    console.error("Error during logout:", error);
+    return false;
+  }
 };
 
 // Function to get current user data
