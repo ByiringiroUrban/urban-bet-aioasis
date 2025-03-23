@@ -37,14 +37,27 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
       
       if (error) {
         console.error("Login error:", error.message);
-        setError(error.message);
         
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        // Handle email confirmation error specifically
+        if (error.message.includes("Email not confirmed")) {
+          setError("Please confirm your email address before logging in. Check your inbox for a confirmation email.");
+          
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your inbox for the confirmation email and click the link to verify your account.",
+            variant: "destructive",
+          });
+        } else {
+          setError(error.message);
+          
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         
+        setIsSubmitting(false);
         return;
       }
       
@@ -63,8 +76,45 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+      
+      setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!loginEmail) {
+      setError("Please enter your email address to resend confirmation");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: loginEmail,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Confirmation email sent",
+        description: "Please check your inbox for the confirmation email.",
+      });
+    } catch (error) {
+      console.error("Error resending confirmation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to resend confirmation email. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -111,6 +161,15 @@ export default function LoginForm({ isSubmitting, setIsSubmitting }: LoginFormPr
         {error && (
           <div className="text-red-500 text-sm">
             {error}
+            {error.includes("Email not confirmed") && (
+              <button 
+                type="button" 
+                onClick={handleResendConfirmation}
+                className="ml-2 text-bet-primary hover:underline"
+              >
+                Resend confirmation email
+              </button>
+            )}
           </div>
         )}
         
