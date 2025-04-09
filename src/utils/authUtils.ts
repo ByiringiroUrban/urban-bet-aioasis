@@ -7,6 +7,12 @@ interface SaveUserResult {
   id?: string;
 }
 
+// Interface to define the expected shape of the MongoDB save result
+interface MongoSaveResult {
+  id?: string | number;
+  [key: string]: any;
+}
+
 // Mock function to simulate social provider auth
 export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
   console.log(`Authenticating with ${provider}...`);
@@ -37,20 +43,25 @@ export const socialLogin = async (provider: 'google' | 'facebook' | 'apple') => 
       currency: 'RWF'
     });
     
-    // Create a proper SaveUserResult object with null checks
+    // Create a proper SaveUserResult object
     let result: SaveUserResult = {
       success: false
     };
     
     // Handle various types of saveResult with proper null checking
-    if (saveResult !== null) {
+    if (saveResult !== null && saveResult !== undefined) {
+      // Set success to true if we have a result
+      result.success = true;
+      
+      // Try to get an ID from the result if it exists
       if (typeof saveResult === 'object') {
-        result.success = true;
-        // Only add id if saveResult has an id property
-        if (saveResult && typeof saveResult === 'object' && 'id' in saveResult) {
-          result.id = String(saveResult.id);
+        // Use type assertion to access id property safely
+        const resultObj = saveResult as { id?: string | number };
+        if (resultObj && resultObj.id) {
+          result.id = String(resultObj.id);
         }
       } else if (typeof saveResult === 'boolean') {
+        // If saveResult is just a boolean, use it for success
         result.success = saveResult;
       }
     }
