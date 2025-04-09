@@ -39,6 +39,11 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/ai-predictions" element={<AIPredictions />} />
             <Route path="/casino" element={<Casino />} />
+            <Route path="/casino/slots" element={<Casino />} />
+            <Route path="/casino/table-games" element={<Casino />} />
+            <Route path="/casino/live-casino" element={<Casino />} />
+            <Route path="/casino/jackpots" element={<Casino />} />
+            <Route path="/casino/game-shows" element={<Casino />} />
             <Route path="/sports" element={<Sports />} />
             <Route path="/sports/:sport" element={<Sports />} />
             <Route path="/sports/:sport/:country" element={<Sports />} />
