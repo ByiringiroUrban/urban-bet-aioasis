@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Menu, 
   X, 
@@ -245,6 +245,12 @@ export default function Navbar() {
                         {currency === "RWF" ? "RWF " : "$"}{userBalance}
                       </span>
                       <Avatar className="h-8 w-8 hover:scale-105 transition-transform">
+                        {localStorage.getItem("userAvatar") ? (
+                          <AvatarImage 
+                            src={localStorage.getItem("userAvatar") || ""} 
+                            className="object-cover" 
+                          />
+                        ) : null}
                         <AvatarFallback className="bg-bet-accent">
                           {userName.split(' ').map(name => name[0]).join('')}
                         </AvatarFallback>

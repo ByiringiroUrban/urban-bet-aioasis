@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,31 +8,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { isAuthenticated } from "@/utils/authUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LockKeyhole, Bell, Shield, User as UserIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LockKeyhole, Bell, Shield, User as UserIcon, Upload } from "lucide-react";
 
 const Account = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
   // Get user data from localStorage
   const userEmail = localStorage.getItem("userEmail") || "user@example.com";
   const userName = localStorage.getItem("userName") || "User";
   
-  // Check if user is authenticated
-  if (!isAuthenticated()) {
-    toast({
-      title: "Authentication required",
-      description: "Please login to access your account settings.",
-      variant: "destructive",
-    });
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to access your account settings.",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+    
+    // Try to get saved avatar from localStorage
+    const savedAvatar = localStorage.getItem("userAvatar");
+    if (savedAvatar) {
+      setAvatarUrl(savedAvatar);
+    }
+  }, [toast, navigate]);
 
   const handleSaveProfile = () => {
     setIsLoading(true);
@@ -45,6 +54,50 @@ const Account = () => {
         description: "Your profile has been updated successfully.",
       });
     }, 1000);
+  };
+  
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file size (max 2 MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 2 MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // In a real app, we would upload the file to a server here
+    // For this demo, we'll use a FileReader to show the image locally
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      setAvatarUrl(imageUrl);
+      // Save to localStorage
+      localStorage.setItem("userAvatar", imageUrl);
+      
+      // Trigger auth change to update UI components that use avatar
+      window.dispatchEvent(new CustomEvent('authChange'));
+      
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been successfully updated.",
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -60,17 +113,34 @@ const Account = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center space-y-4">
-                    <Avatar className="h-24 w-24">
+                    <Avatar className="h-24 w-24 relative group">
+                      {avatarUrl ? (
+                        <AvatarImage src={avatarUrl} className="object-cover" />
+                      ) : null}
                       <AvatarFallback className="bg-bet-accent text-2xl">
                         {userName.split(' ').map(name => name[0]).join('')}
                       </AvatarFallback>
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                        <Upload size={24} className="text-white" />
+                      </div>
                     </Avatar>
                     <div className="text-center">
                       <h3 className="font-medium text-lg">{userName}</h3>
                       <p className="text-sm text-muted-foreground">{userEmail}</p>
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => document.getElementById('avatarUpload')?.click()}
+                    >
                       Change Avatar
+                      <input 
+                        id="avatarUpload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
                     </Button>
                   </div>
                 </CardContent>

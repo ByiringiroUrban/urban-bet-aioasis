@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Brain, Zap, Trophy, ArrowRight } from "lucide-react";
+import { isAuthenticated } from "@/utils/authUtils";
 
 export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -80,16 +81,18 @@ export default function Hero() {
                 <ArrowRight size={16} className="ml-2 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-white/20 hover:bg-white/10"
-              asChild
-            >
-              <Link to="/register">
-                Sign Up Now
-              </Link>
-            </Button>
+            {!isAuthenticated() && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-white/20 hover:bg-white/10"
+                asChild
+              >
+                <Link to="/register">
+                  Sign Up Now
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
         

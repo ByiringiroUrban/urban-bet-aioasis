@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { isAuthenticated } from "@/utils/authUtils";
-import { ArrowUpRight, ArrowDownLeft, Clock, CreditCard, Wallet as WalletIcon, Smartphone, Check, AlertCircle } from "lucide-react";
+import { processPayment, PaymentMethod } from "@/services/paymentService";
+import { ArrowUpRight, ArrowDownLeft, Clock, CreditCard, Wallet as WalletIcon, Smartphone, Check, AlertCircle, Globe } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -27,7 +28,7 @@ const Wallet = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [amount, setAmount] = useState("");
   const [activeTab, setActiveTab] = useState("deposit");
-  const [paymentMethod, setPaymentMethod] = useState("momo");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("momo");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -36,6 +37,7 @@ const Wallet = () => {
   
   // Get user data from localStorage
   const userName = localStorage.getItem("userName") || "User";
+  const userEmail = localStorage.getItem("userEmail") || "";
   
   // Convert balance to RWF (1 USD = ~1,200 RWF as an example)
   const balanceUSD = 1250;
@@ -88,7 +90,7 @@ const Wallet = () => {
     ]);
   }, [toast, navigate]);
 
-  const handleTransaction = () => {
+  const handleTransaction = async () => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       toast({
         title: "Invalid amount",
@@ -98,33 +100,19 @@ const Wallet = () => {
       return;
     }
 
-    if (activeTab === "deposit" && paymentMethod === "momo" && !phoneNumber) {
+    // Phone number validation for mobile money methods
+    if ((activeTab === "deposit" || activeTab === "withdraw") && 
+        (paymentMethod === "momo" || paymentMethod === "airtel") && 
+        !phoneNumber) {
       toast({
         title: "Phone number required",
-        description: "Please enter your MTN Mobile Money number.",
+        description: `Please enter your ${paymentMethod === "momo" ? "MTN Mobile Money" : "Airtel Money"} number.`,
         variant: "destructive",
       });
       return;
     }
 
-    if (activeTab === "deposit" && paymentMethod === "airtel" && !phoneNumber) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter your Airtel Money number.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (activeTab === "withdraw" && !phoneNumber) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter your mobile money number for withdrawal.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    // Card details validation
     if (activeTab === "deposit" && paymentMethod === "card") {
       if (!cardNumber || !expiryDate || !cvv) {
         toast({
@@ -136,6 +124,19 @@ const Wallet = () => {
       }
     }
 
+    // Email validation for Irembo Pay
+    if (activeTab === "deposit" && paymentMethod === "irembo") {
+      if (!userEmail) {
+        toast({
+          title: "Email required",
+          description: "Please ensure your email is set in your profile for Irembo Pay.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Withdrawal balance check
     if (activeTab === "withdraw" && Number(amount) > balanceRWF) {
       toast({
         title: "Insufficient funds",
@@ -147,40 +148,90 @@ const Wallet = () => {
 
     setIsLoading(true);
     
-    // Simulate API call for deposit or withdrawal
-    setTimeout(() => {
-      // Create a new transaction record
+    if (activeTab === "deposit") {
+      // Process the payment using our payment service
+      const paymentResult = await processPayment({
+        amount: Number(amount),
+        phoneNumber: phoneNumber || undefined,
+        email: userEmail,
+        paymentMethod: paymentMethod,
+        currency: "RWF",
+        description: `Deposit to Urban Bet account`,
+        cardDetails: paymentMethod === "card" ? {
+          cardNumber: cardNumber.replace(/\s/g, ''),
+          expiryDate,
+          cvv,
+          cardholderName: userName
+        } : undefined
+      });
+      
+      if (paymentResult.success) {
+        // Create a new transaction record
+        const newTransaction: Transaction = {
+          id: paymentResult.transactionId || `tx-${Date.now()}`,
+          type: "deposit",
+          amount: Number(amount),
+          status: "pending",
+          date: new Date().toISOString().split('T')[0],
+          method: paymentMethod === "momo" 
+            ? "MTN Mobile Money" 
+            : paymentMethod === "airtel"
+              ? "Airtel Money"
+              : paymentMethod === "irembo"
+                ? "Irembo Pay"
+                : "Card Payment"
+        };
+        
+        // Update transactions list
+        setTransactions([newTransaction, ...transactions]);
+        
+        toast({
+          title: "Deposit initiated",
+          description: paymentResult.message || `RWF ${Number(amount).toLocaleString()} deposit is being processed.`,
+        });
+        
+        // If there's a redirect URL (e.g., for Irembo Pay), redirect
+        if (paymentResult.redirectUrl) {
+          window.open(paymentResult.redirectUrl, '_blank');
+        }
+      } else {
+        // Payment failed
+        toast({
+          title: "Payment failed",
+          description: paymentResult.message,
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Handle withdrawal - simpler since it's usually an internal process
       const newTransaction: Transaction = {
         id: `tx-${Date.now()}`,
-        type: activeTab === "deposit" ? "deposit" : "withdrawal",
-        amount: activeTab === "deposit" ? Number(amount) : -Number(amount),
+        type: "withdrawal",
+        amount: -Number(amount),
         status: "pending",
         date: new Date().toISOString().split('T')[0],
         method: paymentMethod === "momo" 
           ? "MTN Mobile Money" 
-          : paymentMethod === "airtel"
-            ? "Airtel Money"
-            : "Card Payment"
+          : "Airtel Money"
       };
       
       // Update transactions list
       setTransactions([newTransaction, ...transactions]);
       
-      setIsLoading(false);
       toast({
-        title: activeTab === "deposit" ? "Deposit initiated" : "Withdrawal request submitted",
-        description: activeTab === "deposit"
-          ? `RWF ${Number(amount).toLocaleString()} deposit is being processed.`
-          : `Your withdrawal request for RWF ${Number(amount).toLocaleString()} is being processed.`,
+        title: "Withdrawal request submitted",
+        description: `Your withdrawal request for RWF ${Number(amount).toLocaleString()} is being processed.`,
       });
-      
-      // Reset form
-      setAmount("");
-      setPhoneNumber("");
-      setCardNumber("");
-      setExpiryDate("");
-      setCvv("");
-    }, 1500);
+    }
+    
+    setIsLoading(false);
+    
+    // Reset form
+    setAmount("");
+    setPhoneNumber("");
+    setCardNumber("");
+    setExpiryDate("");
+    setCvv("");
   };
 
   const getTransactionIcon = (type: Transaction['type']) => {
@@ -339,7 +390,7 @@ const Wallet = () => {
                         
                         <div className="space-y-2">
                           <Label>Payment Method</Label>
-                          <div className="grid grid-cols-3 gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div 
                               className={`border rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${paymentMethod === 'momo' ? 'border-bet-primary bg-bet-primary/10' : 'border-border hover:border-bet-primary/50'}`}
                               onClick={() => setPaymentMethod('momo')}
@@ -353,6 +404,13 @@ const Wallet = () => {
                             >
                               <Smartphone size={24} className="mb-2" />
                               <span className="text-sm font-medium">Airtel Money</span>
+                            </div>
+                            <div 
+                              className={`border rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${paymentMethod === 'irembo' ? 'border-bet-primary bg-bet-primary/10' : 'border-border hover:border-bet-primary/50'}`}
+                              onClick={() => setPaymentMethod('irembo')}
+                            >
+                              <Globe size={24} className="mb-2" />
+                              <span className="text-sm font-medium">Irembo Pay</span>
                             </div>
                             <div 
                               className={`border rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${paymentMethod === 'card' ? 'border-bet-primary bg-bet-primary/10' : 'border-border hover:border-bet-primary/50'}`}
@@ -376,6 +434,22 @@ const Wallet = () => {
                               onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
                             />
                             <p className="text-xs text-muted-foreground">Enter a valid Rwandan phone number</p>
+                          </div>
+                        )}
+                        
+                        {paymentMethod === 'irembo' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="iremboEmail">Email for Irembo Pay</Label>
+                            <Input 
+                              id="iremboEmail" 
+                              type="email"
+                              placeholder="Your email address" 
+                              value={userEmail}
+                              readOnly
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              You will receive payment instructions at this email
+                            </p>
                           </div>
                         )}
                         

@@ -9,7 +9,20 @@ export default function CallToActionSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   useEffect(() => {
-    setIsLoggedIn(isAuthenticated());
+    const checkAuth = () => {
+      setIsLoggedIn(isAuthenticated());
+    };
+    
+    checkAuth();
+    
+    // Listen for auth changes
+    window.addEventListener('authChange', checkAuth);
+    window.addEventListener('storage', checkAuth); // For cross-tab sync
+    
+    return () => {
+      window.removeEventListener('authChange', checkAuth);
+      window.removeEventListener('storage', checkAuth);
+    };
   }, []);
 
   if (isLoggedIn) return null;
