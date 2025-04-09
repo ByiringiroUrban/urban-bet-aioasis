@@ -3,17 +3,13 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import CasinoGameCard from "@/components/CasinoGameCard";
+import { CasinoGame } from "@/types";
 
-interface CasinoGame {
-  title: string;
-  imageSrc: string;
-  provider: string;
-  isNew?: boolean;
-  isPopular?: boolean;
-  category: string;
+interface CasinoGamesSectionProps {
+  casinoGames: CasinoGame[];
 }
 
-export default function CasinoGamesSection({ casinoGames }: { casinoGames: CasinoGame[] }) {
+export default function CasinoGamesSection({ casinoGames }: CasinoGamesSectionProps) {
   return (
     <section className="py-12 px-4 bg-bet-dark-accent">
       <div className="max-w-7xl mx-auto">
