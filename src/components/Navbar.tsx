@@ -275,6 +275,11 @@ export default function Navbar() {
                         <Wallet size={14} className="mr-2" /> Wallet
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer">
+                        <Settings size={14} className="mr-2" /> Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       className="text-red-500 focus:text-red-500 cursor-pointer"
@@ -350,6 +355,11 @@ export default function Navbar() {
                   <Link to="/wallet" onClick={toggleMenu}>
                     <Button variant="outline" size="sm" className="w-full">
                       <Wallet size={14} className="mr-2" /> Wallet
+                    </Button>
+                  </Link>
+                  <Link to="/admin" onClick={toggleMenu}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Settings size={14} className="mr-2" /> Admin Dashboard
                     </Button>
                   </Link>
                   <Button 
