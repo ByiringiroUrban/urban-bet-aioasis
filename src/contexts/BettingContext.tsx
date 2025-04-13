@@ -23,9 +23,34 @@ interface BettingContextType {
   convertAmount: (amount: number, from: "USD" | "RWF", to: "USD" | "RWF") => number;
 }
 
+// Global context instance for testing if we're already inside a provider
+let isBettingProviderMounted = false;
+
 const BettingContext = createContext<BettingContextType | undefined>(undefined);
 
-export const BettingProvider = ({ children }: { children: ReactNode }) => {
+interface BettingProviderProps {
+  children: ReactNode;
+  isRoot?: boolean;
+}
+
+export const BettingProvider = ({ children, isRoot = false }: BettingProviderProps) => {
+  React.useEffect(() => {
+    if (isRoot) {
+      isBettingProviderMounted = true;
+      return () => {
+        isBettingProviderMounted = false;
+      };
+    }
+  }, [isRoot]);
+
+  // Add a check for existing context to avoid nesting warnings
+  const existingContext = useContext(BettingContext);
+  
+  // If we already have a context and this is not the root provider, just return the children
+  if (existingContext !== undefined && !isRoot) {
+    return <>{children}</>;
+  }
+
   const [betItems, setBetItems] = useState<BetItem[]>([]);
   const [currency, setCurrency] = useState<"USD" | "RWF">("RWF");
   // Exchange rate: 1 USD = 1200 RWF
@@ -124,10 +149,48 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+export const BettingProviderRoot = ({ children }: { children: ReactNode }) => {
+  // This is the root provider that should be used only once in the app
+  return (
+    <BettingProvider isRoot={true}>
+      {children}
+    </BettingProvider>
+  );
+};
+
 export const useBetting = () => {
   const context = useContext(BettingContext);
+  
+  // More graceful error handling - either we get the context, or we get a mock context
+  // that does nothing but doesn't crash the app
   if (context === undefined) {
-    throw new Error("useBetting must be used within a BettingProvider");
+    console.warn("useBetting hook used outside of BettingProvider. Some functionality will be limited.");
+    
+    // Return a placeholder implementation that doesn't crash
+    return {
+      betItems: [],
+      addBet: () => {
+        console.warn("Betting functionality unavailable - addBet called outside BettingProvider");
+        toast.error("Unable to add bet - please refresh the page");
+      },
+      removeBet: () => {
+        console.warn("Betting functionality unavailable - removeBet called outside BettingProvider");
+      },
+      clearBets: () => {
+        console.warn("Betting functionality unavailable - clearBets called outside BettingProvider");
+      },
+      placeBet: async () => {
+        console.warn("Betting functionality unavailable - placeBet called outside BettingProvider");
+        toast.error("Unable to place bet - please refresh the page");
+      },
+      currency: "RWF" as const,
+      setCurrency: () => {
+        console.warn("Betting functionality unavailable - setCurrency called outside BettingProvider");
+      },
+      exchangeRate: 1200,
+      convertAmount: (amount: number) => amount,
+    };
   }
+  
   return context;
 };

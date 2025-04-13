@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { BettingProvider } from "@/contexts/BettingContext";
+import { BettingProviderRoot } from "@/contexts/BettingContext";
 import GlobalBettingSlip from "@/components/GlobalBettingSlip";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -29,7 +29,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BettingProvider>
+      <BettingProviderRoot>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -63,7 +63,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </BettingProvider>
+      </BettingProviderRoot>
     </TooltipProvider>
   </QueryClientProvider>
 );

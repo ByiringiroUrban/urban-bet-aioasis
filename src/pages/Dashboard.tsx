@@ -11,6 +11,7 @@ import { getBetHistory } from "@/services/bettingService";
 import { getAIPredictions } from "@/services/predictionsService";
 import { useAuth } from "@/hooks/useAuth";
 import { BetRecord } from "@/services/database/types";
+import { BettingProvider } from "@/contexts/BettingContext";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -96,30 +97,32 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-            <div className="w-full md:w-1/4">
-              <UserProfile userData={userData} />
-            </div>
-            
-            <div className="w-full md:w-3/4">
-              <DashboardTabs 
-                betHistory={betHistory}
-                loadingBets={loadingBets}
-                aiPredictions={aiPredictions}
-                loadingPredictions={loadingPredictions}
-              />
+    <BettingProvider>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        
+        <main className="flex-1 py-8 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+              <div className="w-full md:w-1/4">
+                <UserProfile userData={userData} />
+              </div>
+              
+              <div className="w-full md:w-3/4">
+                <DashboardTabs 
+                  betHistory={betHistory}
+                  loadingBets={loadingBets}
+                  aiPredictions={aiPredictions}
+                  loadingPredictions={loadingPredictions}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-      
-      <Footer />
-    </div>
+        </main>
+        
+        <Footer />
+      </div>
+    </BettingProvider>
   );
 };
 

@@ -23,7 +23,7 @@ export default function AIInsightCard({
   trend,
   odds
 }: AIInsightCardProps) {
-  const { addBet } = useBetting();
+  const betting = useBetting();
   const [isAdded, setIsAdded] = useState(false);
   
   // Determine confidence color
@@ -39,7 +39,7 @@ export default function AIInsightCard({
     const numericOdds = parseFloat(odds.split(' ')[0]);
     
     if (!isNaN(numericOdds)) {
-      addBet({
+      betting.addBet({
         event: match,
         selection: prediction,
         odds: numericOdds

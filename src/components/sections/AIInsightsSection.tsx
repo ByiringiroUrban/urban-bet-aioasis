@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import AIInsightCard from "@/components/AIInsightCard";
+import { BettingProvider } from "@/contexts/BettingContext";
 
 interface AIInsight {
   match: string;
@@ -14,7 +15,8 @@ interface AIInsight {
 }
 
 export default function AIInsightsSection({ aiInsights }: { aiInsights: AIInsight[] }) {
-  return (
+  // The content that needs a BettingProvider
+  const content = (
     <section className="py-12 px-4 bg-bet-dark-accent">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
@@ -44,5 +46,13 @@ export default function AIInsightsSection({ aiInsights }: { aiInsights: AIInsigh
         </div>
       </div>
     </section>
+  );
+
+  // We need to wrap the content in a BettingProvider directly in this component
+  // since we don't control how this component is used in various pages
+  return (
+    <BettingProvider>
+      {content}
+    </BettingProvider>
   );
 }
