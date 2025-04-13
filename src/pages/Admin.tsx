@@ -11,6 +11,7 @@ import AdminSetup from "@/components/admin/AdminSetup";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminRisk from "@/components/admin/AdminRisk";
 import AdminTransactions from "@/components/admin/AdminTransactions";
+import AdminCasinoGames from "@/components/admin/AdminCasinoGames";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
@@ -140,9 +141,10 @@ export default function Admin() {
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
         
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-8">
+          <TabsList className="grid w-full grid-cols-8 mb-8">
             <TabsTrigger value="dashboard">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="casino">Casino Games</TabsTrigger>
             <TabsTrigger value="bets">Bets</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
@@ -158,6 +160,10 @@ export default function Admin() {
               
               <TabsContent value="events" className="mt-0">
                 <AdminEvents />
+              </TabsContent>
+              
+              <TabsContent value="casino" className="mt-0">
+                <AdminCasinoGames />
               </TabsContent>
               
               <TabsContent value="bets" className="mt-0">
