@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { isAdmin, addAdmin, getCurrentUser } from "@/utils/authUtils";
+import { isAdmin, addAdmin } from "@/utils/authUtils";
+import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
@@ -51,19 +52,19 @@ export default function Admin() {
   };
 
   const makeSelfAdmin = async () => {
-    const user = getCurrentUser();
-    
-    if (!user || !user.email) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to perform this action",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     try {
-      const result = await addAdmin(user.token || "");
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user || !user.email) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to perform this action",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const result = await addAdmin(user.id);
       
       if (result) {
         toast({

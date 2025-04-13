@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase, getCurrentUser, getCurrentSession } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { saveUser, getUser } from '@/services/userService';
 
@@ -23,10 +23,11 @@ export const useAuth = () => {
   const fetchUserData = async () => {
     setIsLoading(true);
     try {
-      const session = await getCurrentSession();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
       
-      if (session.data.session) {
-        const supabaseUser = await getCurrentUser();
+      if (session) {
+        const { data: { user: supabaseUser } } = await supabase.auth.getUser();
         
         if (supabaseUser) {
           // Get additional user data from our service

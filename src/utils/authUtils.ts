@@ -1,5 +1,5 @@
 import { mongoService } from '@/services/mongoService';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Interface for the return type of saveUser
 interface SaveUserResult {
