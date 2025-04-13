@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { getCurrentUser } from "@/utils/authUtils";
+import { getCurrentUser, addAdmin } from "@/utils/authUtils";
 
 export default function AdminSetup() {
   const [userEmail, setUserEmail] = useState("");
@@ -45,30 +45,23 @@ export default function AdminSetup() {
       
       const userId = profiles[0].id;
       
-      // Make user an admin
-      const { error } = await supabase
-        .from('user_roles')
-        .insert([{ user_id: userId, role: 'admin' }]);
+      // Use addAdmin function which now uses create_first_admin first
+      const result = await addAdmin(userId);
       
-      if (error) {
-        // If it's a unique constraint error, the user might already be an admin
-        if (error.code === '23505') {
-          toast({
-            title: "Already Admin",
-            description: "This user is already an admin",
-          });
-          return;
-        }
-        throw error;
+      if (result) {
+        toast({
+          title: "Success",
+          description: "User has been made an admin successfully",
+        });
+        // Clear the input
+        setUserEmail("");
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to make user an admin. Please try again.",
+          variant: "destructive",
+        });
       }
-      
-      toast({
-        title: "Success",
-        description: "User has been made an admin successfully",
-      });
-      
-      // Clear the input
-      setUserEmail("");
     } catch (error) {
       console.error('Error making user an admin:', error);
       toast({
@@ -85,9 +78,10 @@ export default function AdminSetup() {
     setLoading(true);
     
     try {
-      const user = getCurrentUser();
+      // Get the current authenticated user directly from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user || !user.email) {
+      if (!user) {
         toast({
           title: "Error",
           description: "You must be logged in to perform this action",
@@ -96,47 +90,21 @@ export default function AdminSetup() {
         return;
       }
       
-      // Find your user ID
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', user.email)
-        .limit(1);
+      // Use the addAdmin function from authUtils which now uses create_first_admin
+      const result = await addAdmin(user.id);
       
-      if (profileError) throw profileError;
-      
-      if (!profiles || profiles.length === 0) {
+      if (result) {
         toast({
-          title: "User Not Found",
-          description: "Your profile could not be found",
+          title: "Success",
+          description: "You are now an admin. Please refresh the page.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to make you an admin. Please try again.",
           variant: "destructive",
         });
-        return;
       }
-      
-      const userId = profiles[0].id;
-      
-      // Make yourself an admin
-      const { error } = await supabase
-        .from('user_roles')
-        .insert([{ user_id: userId, role: 'admin' }]);
-      
-      if (error) {
-        // If it's a unique constraint error, you might already be an admin
-        if (error.code === '23505') {
-          toast({
-            title: "Already Admin",
-            description: "You are already an admin",
-          });
-          return;
-        }
-        throw error;
-      }
-      
-      toast({
-        title: "Success",
-        description: "You are now an admin. Please refresh the page.",
-      });
     } catch (error) {
       console.error('Error making self an admin:', error);
       toast({

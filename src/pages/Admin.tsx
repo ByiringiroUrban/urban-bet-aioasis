@@ -55,7 +55,7 @@ export default function Admin() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user || !user.email) {
+      if (!user) {
         toast({
           title: "Error",
           description: "You must be logged in to perform this action",
@@ -64,6 +64,7 @@ export default function Admin() {
         return;
       }
       
+      // This will try createFirstAdmin first, then fall back to regular addAdmin
       const result = await addAdmin(user.id);
       
       if (result) {
@@ -118,6 +119,52 @@ export default function Admin() {
               </Button>
               <Button onClick={makeSelfAdmin}>
                 Make Me an Admin
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={async () => {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) {
+                      toast({
+                        title: "Error",
+                        description: "You must be logged in to perform this action",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    // Direct call to create_first_admin
+                    const { data, error } = await supabase.rpc('create_first_admin', {
+                      admin_user_id: user.id
+                    });
+                    
+                    if (error) {
+                      throw error;
+                    }
+                    
+                    if (data === true) {
+                      toast({
+                        title: "Success",
+                        description: "You are now the first admin. Please refresh the page.",
+                      });
+                    } else {
+                      toast({
+                        title: "Not First Admin",
+                        description: "Admin roles already exist in the system.",
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error:", error);
+                    toast({
+                      title: "Error",
+                      description: "An unexpected error occurred",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                Try to Become First Admin
               </Button>
             </div>
           </div>

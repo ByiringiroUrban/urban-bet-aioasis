@@ -175,16 +175,52 @@ export const isAdmin = async (): Promise<boolean> => {
   }
 };
 
+// Function to create the first admin in the system using the create_first_admin function
+export const createFirstAdmin = async (userId: string): Promise<boolean> => {
+  try {
+    console.log("Attempting to create first admin with user ID:", userId);
+    
+    const { data, error } = await supabase.rpc('create_first_admin', {
+      admin_user_id: userId
+    });
+    
+    if (error) {
+      console.error("Error creating first admin:", error);
+      return false;
+    }
+    
+    console.log("Create first admin response:", data);
+    return data === true;
+  } catch (error) {
+    console.error("Error in createFirstAdmin:", error);
+    return false;
+  }
+};
+
 // Function to add a user as an admin (only callable by admins)
 export const addAdmin = async (userId: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
+    // First try to use the create_first_admin function
+    const isFirstAdmin = await createFirstAdmin(userId);
+    if (isFirstAdmin) {
+      console.log("Successfully created first admin");
+      return true;
+    }
+    
+    // If not the first admin, try regular insertion
+    const { error } = await supabase
       .from('user_roles')
       .insert([
         { user_id: userId, role: 'admin' }
       ]);
     
     if (error) {
+      // If it's a unique constraint error, the user might already be an admin
+      if (error.code === '23505') {
+        console.log("User is already an admin");
+        return true;
+      }
+      
       console.error("Error adding admin:", error);
       return false;
     }
