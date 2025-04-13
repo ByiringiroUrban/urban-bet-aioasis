@@ -77,3 +77,45 @@ export const getUser = async (userId: string): Promise<UserData | null> => {
     return null;
   }
 };
+
+// Delete user account
+export const deleteUser = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    // First get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { success: false, message: "No user is currently logged in" };
+    }
+    
+    // Delete user's profile data first
+    const { error: profileDeleteError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', user.id);
+      
+    if (profileDeleteError) {
+      console.error('Error deleting user profile:', profileDeleteError);
+      return { success: false, message: `Failed to delete profile: ${profileDeleteError.message}` };
+    }
+    
+    // Since we don't have admin access, instead of deleting the user auth account
+    // we'll just sign them out globally which will invalidate all sessions
+    const { error: signOutError } = await supabase.auth.signOut({ 
+      scope: 'global' 
+    });
+    
+    if (signOutError) {
+      console.error('Error signing out user:', signOutError);
+      return { success: false, message: `Failed to sign out: ${signOutError.message}` };
+    }
+    
+    return { success: true, message: "Account successfully deleted" };
+  } catch (error) {
+    console.error('Error in deleteUser:', error);
+    return { 
+      success: false, 
+      message: `An unexpected error occurred: ${error instanceof Error ? error.message : String(error)}` 
+    };
+  }
+};

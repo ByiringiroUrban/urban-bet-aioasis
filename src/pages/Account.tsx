@@ -13,12 +13,14 @@ import { isAuthenticated } from "@/utils/authUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LockKeyhole, Bell, Shield, User as UserIcon, Upload } from "lucide-react";
+import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 
 const Account = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Get user data from localStorage
   const userEmail = localStorage.getItem("userEmail") || "user@example.com";
@@ -330,7 +332,11 @@ const Account = () => {
                       </div>
                       
                       <div className="pt-6">
-                        <Button variant="outline" className="text-bet-danger border-bet-danger/30 hover:bg-bet-danger/10 hover:text-bet-danger">
+                        <Button 
+                          variant="outline" 
+                          className="text-bet-danger border-bet-danger/30 hover:bg-bet-danger/10 hover:text-bet-danger"
+                          onClick={() => setShowDeleteDialog(true)}
+                        >
                           Delete My Account
                         </Button>
                       </div>
@@ -344,6 +350,12 @@ const Account = () => {
       </main>
       
       <Footer />
+      
+      {/* Delete Account Dialog */}
+      <DeleteAccountDialog 
+        open={showDeleteDialog} 
+        onOpenChange={setShowDeleteDialog} 
+      />
     </div>
   );
 };
