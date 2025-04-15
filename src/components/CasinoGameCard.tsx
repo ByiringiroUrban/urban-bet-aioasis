@@ -12,7 +12,7 @@ interface CasinoGameCardProps {
   provider: string;
   isNew?: boolean;
   isPopular?: boolean;
-  category: string;
+  category?: string; // Make category optional
 }
 
 export default function CasinoGameCard({
@@ -21,7 +21,7 @@ export default function CasinoGameCard({
   provider,
   isNew = false,
   isPopular = false,
-  category
+  category = 'other' // Provide a default category
 }: CasinoGameCardProps) {
   const [isGameOpen, setIsGameOpen] = useState(false);
   const { toast } = useToast();
@@ -87,7 +87,8 @@ export default function CasinoGameCard({
         game={{
           title,
           provider,
-          imageSrc
+          imageSrc,
+          category // Include category here
         }}
       />
     </>

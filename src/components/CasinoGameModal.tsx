@@ -13,7 +13,7 @@ interface CasinoGameModalProps {
     title: string;
     provider: string;
     imageSrc: string;
-    category: string;
+    category?: string;
   };
 }
 
@@ -112,7 +112,7 @@ export default function CasinoGameModal({ open, onClose, game }: CasinoGameModal
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              {game.category === 'aviator' ? (
+              {(game.category === 'aviator' || game.title.toLowerCase().includes('aviator')) ? (
                 <AviatorGame onClose={onClose} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-bet-primary/20 to-bet-accent/20 text-white">
