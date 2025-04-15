@@ -18,7 +18,7 @@ export const getAIPredictions = async (userId: string): Promise<AIprediction[]> 
     return data || [];
   } catch (error) {
     console.error('Error in getAIPredictions:', error);
-    throw error;
+    return []; // Return empty array instead of throwing
   }
 };
 
@@ -37,6 +37,10 @@ export const generatePrediction = async (matchData: {
     return data;
   } catch (error) {
     console.error('Error generating prediction:', error);
-    throw error;
+    // Return a fallback response instead of throwing
+    return {
+      success: false,
+      error: 'Failed to generate prediction. Please try again later.'
+    };
   }
 };

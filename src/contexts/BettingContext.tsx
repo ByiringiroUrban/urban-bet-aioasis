@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 import { isAuthenticated } from "@/utils/authUtils";
 import { saveBet } from "@/services/bettingService";
@@ -33,6 +33,10 @@ interface BettingProviderProps {
   isRoot?: boolean;
 }
 
+// Local storage keys
+const BET_ITEMS_STORAGE_KEY = 'urbanbet_betslip';
+const CURRENCY_STORAGE_KEY = 'urbanbet_currency';
+
 export const BettingProvider = ({ children, isRoot = false }: BettingProviderProps) => {
   React.useEffect(() => {
     if (isRoot) {
@@ -51,10 +55,38 @@ export const BettingProvider = ({ children, isRoot = false }: BettingProviderPro
     return <>{children}</>;
   }
 
-  const [betItems, setBetItems] = useState<BetItem[]>([]);
-  const [currency, setCurrency] = useState<"USD" | "RWF">("RWF");
+  // Initialize state from localStorage if available
+  const [betItems, setBetItems] = useState<BetItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedBets = localStorage.getItem(BET_ITEMS_STORAGE_KEY);
+      return savedBets ? JSON.parse(savedBets) : [];
+    }
+    return [];
+  });
+  
+  const [currency, setCurrency] = useState<"USD" | "RWF">(() => {
+    if (typeof window !== 'undefined') {
+      const savedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY);
+      return (savedCurrency === 'USD' || savedCurrency === 'RWF') ? savedCurrency : 'RWF';
+    }
+    return 'RWF';
+  });
+  
   // Exchange rate: 1 USD = 1200 RWF
   const exchangeRate = 1200;
+  
+  // Save to localStorage whenever bets or currency change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(BET_ITEMS_STORAGE_KEY, JSON.stringify(betItems));
+    }
+  }, [betItems]);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(CURRENCY_STORAGE_KEY, currency);
+    }
+  }, [currency]);
   
   const convertAmount = (amount: number, from: "USD" | "RWF", to: "USD" | "RWF"): number => {
     if (from === to) return amount;
