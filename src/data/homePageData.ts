@@ -1,4 +1,3 @@
-
 import { Match, CasinoGame, AIInsight } from "@/types";
 
 export const aiInsights: AIInsight[] = [
@@ -62,7 +61,7 @@ export const upcomingMatches: Match[] = [
     time: "19:30",
     date: "Thu, 20 Oct",
     homeOdds: 1.85,
-    drawOdds: 0, // Adding a placeholder value for sports without draws
+    drawOdds: 0,
     awayOdds: 1.95
   },
   {
@@ -74,12 +73,20 @@ export const upcomingMatches: Match[] = [
     time: "14:00",
     date: "Fri, 21 Oct",
     homeOdds: 1.75,
-    drawOdds: 0, // Adding a placeholder value for sports without draws
+    drawOdds: 0,
     awayOdds: 2.05
   }
 ];
 
 export const casinoGames: CasinoGame[] = [
+  {
+    title: "Aviator",
+    imageSrc: "https://images.unsplash.com/photo-1436891620584-47fd0e565afb?q=80&w=1000&auto=format&fit=crop",
+    provider: "Urban Games",
+    isNew: true,
+    isPopular: true,
+    category: "aviator"
+  },
   {
     title: "Fortune Tiger",
     imageSrc: "https://images.unsplash.com/photo-1606167668584-78701c57f13d?q=80&w=500&auto=format&fit=crop",

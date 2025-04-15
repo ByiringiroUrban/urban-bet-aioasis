@@ -1,10 +1,10 @@
-
 import { Play, X, Maximize2, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import AviatorGame from "./games/AviatorGame";
 
 interface CasinoGameModalProps {
   open: boolean;
@@ -13,6 +13,7 @@ interface CasinoGameModalProps {
     title: string;
     provider: string;
     imageSrc: string;
+    category: string;
   };
 }
 
@@ -111,14 +112,17 @@ export default function CasinoGameModal({ open, onClose, game }: CasinoGameModal
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              {/* This would be replaced with the actual game iframe in a production environment */}
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-bet-primary/20 to-bet-accent/20 text-white">
-                <div className="text-center p-8 max-w-md">
-                  <h3 className="text-2xl font-bold mb-4">Playing {game.title}</h3>
-                  <p className="mb-4">In a production environment, this would load the actual game from {game.provider}.</p>
-                  <p>The game would be embedded in an iframe with secure communication between the casino platform and the game provider's servers.</p>
+              {game.category === 'aviator' ? (
+                <AviatorGame onClose={onClose} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-bet-primary/20 to-bet-accent/20 text-white">
+                  <div className="text-center p-8 max-w-md">
+                    <h3 className="text-2xl font-bold mb-4">Playing {game.title}</h3>
+                    <p className="mb-4">In a production environment, this would load the actual game from {game.provider}.</p>
+                    <p>The game would be embedded in an iframe with secure communication between the casino platform and the game provider's servers.</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
