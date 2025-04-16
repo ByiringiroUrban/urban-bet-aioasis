@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { TableCell } from "@/components/ui/table";
 import { SportEvent } from "@/services/database/types";
 
 interface EditEventFormProps {
