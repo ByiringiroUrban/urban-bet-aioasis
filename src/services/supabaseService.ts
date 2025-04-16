@@ -6,7 +6,7 @@
 import { initializeDatabase } from './databaseService';
 import { saveUser, getUser } from './userService';
 import { saveBet, getBetHistory } from './bettingService';
-import { getSports, getMarkets } from './sportsDataService';
+import { getSports, getMarkets, getEvents, getFeaturedEvents, getOddsForEvent } from './sportsDataService';
 import { getAIPredictions } from './predictionsService';
 
 // Export the service object that combines all services
@@ -25,6 +25,9 @@ export const supabaseService = {
   // Sports and markets operations
   getSports,
   getMarkets,
+  getEvents,
+  getFeaturedEvents,
+  getOddsForEvent,
   
   // AI predictions
   getAIPredictions
@@ -39,6 +42,9 @@ export {
   getBetHistory,
   getSports,
   getMarkets,
+  getEvents,
+  getFeaturedEvents,
+  getOddsForEvent,
   getAIPredictions
 };
 

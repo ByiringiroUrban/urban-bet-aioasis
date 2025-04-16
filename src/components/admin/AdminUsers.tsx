@@ -6,7 +6,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { addAdmin } from "@/utils/authUtils";
-import { UserPlus, Shield, Search } from "lucide-react";
+import { UserPlus, Shield, Search, Ban, Wallet, RotateCw } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface User {
   id: string;
@@ -21,6 +30,9 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newBalance, setNewBalance] = useState("0");
+  const [isBalanceDialogOpen, setIsBalanceDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -95,6 +107,54 @@ export default function AdminUsers() {
       setAddingAdmin(false);
     }
   };
+  
+  const handleUpdateBalance = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      const balance = parseFloat(newBalance);
+      
+      if (isNaN(balance)) {
+        toast({
+          title: "Error",
+          description: "Please enter a valid amount.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ balance })
+        .eq('id', selectedUser.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: `Balance updated successfully for ${selectedUser.name || 'user'}.`,
+      });
+      
+      // Refresh users
+      await loadUsers();
+      
+      // Close dialog
+      setIsBalanceDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating balance:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update balance. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const openBalanceDialog = (user: User) => {
+    setSelectedUser(user);
+    setNewBalance(user.balance ? user.balance.toString() : "0");
+    setIsBalanceDialogOpen(true);
+  };
 
   const filteredUsers = users.filter(user => 
     (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -105,15 +165,21 @@ export default function AdminUsers() {
     <div>
       <h2 className="text-2xl font-bold mb-6">Manage Users</h2>
       
-      {/* Search */}
-      <div className="relative max-w-sm mb-6">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name or email"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-8"
-        />
+      {/* Search and Refresh */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        
+        <Button variant="outline" onClick={loadUsers}>
+          <RotateCw className="h-4 w-4 mr-2" /> Refresh
+        </Button>
       </div>
       
       {/* Users Table */}
@@ -142,7 +208,14 @@ export default function AdminUsers() {
                 <TableRow key={user.id}>
                   <TableCell>{user.name || 'Anonymous'}</TableCell>
                   <TableCell>{user.email || 'No email'}</TableCell>
-                  <TableCell>{user.balance !== null ? `${user.balance.toLocaleString()} RWF` : 'N/A'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
+                      <span>{user.balance !== null ? `${user.balance.toLocaleString()} RWF` : 'N/A'}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openBalanceDialog(user)}>
+                        <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {user.isAdmin ? (
                       <div className="flex items-center">
@@ -154,17 +227,28 @@ export default function AdminUsers() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {!user.isAdmin && (
+                    <div className="flex justify-end gap-2">
+                      {!user.isAdmin && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleMakeAdmin(user.id)}
+                          disabled={addingAdmin}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Make Admin
+                        </Button>
+                      )}
+                      
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleMakeAdmin(user.id)}
-                        disabled={addingAdmin}
+                        className="text-destructive hover:text-destructive"
                       >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Make Admin
+                        <Ban className="h-4 w-4 mr-1" />
+                        Ban User
                       </Button>
-                    )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -176,6 +260,39 @@ export default function AdminUsers() {
           </TableBody>
         </Table>
       </div>
+      
+      {/* Balance Update Dialog */}
+      <Dialog open={isBalanceDialogOpen} onOpenChange={setIsBalanceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Account Balance</DialogTitle>
+            <DialogDescription>
+              Adjust the balance for {selectedUser?.name || 'this user'}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newBalance">New Balance (RWF)</Label>
+              <Input
+                id="newBalance"
+                type="number"
+                value={newBalance}
+                onChange={(e) => setNewBalance(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsBalanceDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateBalance}>
+              Update Balance
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
