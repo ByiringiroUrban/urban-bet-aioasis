@@ -1,13 +1,14 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Clock, ShieldCheck, UserCheck, Wallet, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { ResponsibleGamblingQuiz } from "@/components/ResponsibleGamblingQuiz";
 
 const ResponsibleGambling = () => {
+  const [quizOpen, setQuizOpen] = useState(false);
+
   const supportContacts = [
     {
       name: "National Problem Gambling Helpline",
@@ -86,10 +87,8 @@ const ResponsibleGambling = () => {
                   Take our quick self-assessment to understand your gambling habits.
                 </p>
               </div>
-              <Button asChild>
-                <Link to="/responsible-gambling/assessment">
-                  Take Assessment
-                </Link>
+              <Button onClick={() => setQuizOpen(true)}>
+                Take Assessment
               </Button>
             </div>
           </section>
@@ -149,9 +148,13 @@ const ResponsibleGambling = () => {
       </main>
       
       <Footer />
+
+      <ResponsibleGamblingQuiz 
+        open={quizOpen} 
+        onOpenChange={setQuizOpen}
+      />
     </div>
   );
 };
 
 export default ResponsibleGambling;
-
