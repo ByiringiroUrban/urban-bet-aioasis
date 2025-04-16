@@ -85,13 +85,12 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
         is_live,
         featured,
         sport_id,
-        sports!inner (
+        sports (
           name
         )
       `)
       .order('start_time', { ascending: true });
     
-    // Apply filters
     if (sportId) {
       query = query.eq('sport_id', sportId);
     }
@@ -104,7 +103,6 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
     
     if (error) throw error;
     
-    // Transform to match SportEvent type
     const events: SportEvent[] = (data || []).map(event => ({
       id: event.id,
       homeTeam: event.home_team,
@@ -118,12 +116,11 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
       awayOdds: 5.0,
       isLive: event.is_live || false,
       sportId: event.sport_id,
-      sportName: event.sports?.name || '',
+      sportName: event.sports ? event.sports.name : '',
       startTime: event.start_time,
       featured: event.featured || false
     }));
     
-    // Fetch odds for each event
     for (const event of events) {
       const { data: oddsData, error: oddsError } = await supabase
         .from('odds')
@@ -131,7 +128,6 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
         .eq('event_id', event.id);
         
       if (!oddsError && oddsData && oddsData.length > 0) {
-        // Find match winner odds (Home, Draw, Away)
         const matchWinnerOdds = oddsData.filter(odd => 
           odd.selection === 'Home' || 
           odd.selection === 'Draw' || 

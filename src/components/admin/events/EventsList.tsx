@@ -1,14 +1,12 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { SportEvent } from "@/services/database/types";
-import { Pencil, Trash, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import OddsManagement from './OddsManagement';
+import EventActions from './EventActions';
+import EditEventForm from './EditEventForm';
 
 interface EventsListProps {
   events: SportEvent[];
@@ -159,63 +157,13 @@ export default function EventsList({ events, loading, onEventUpdated }: EventsLi
         <React.Fragment key={event.id}>
           <TableRow>
             {editMode === event.id ? (
-              <>
-                <TableCell>
-                  <Input 
-                    name="homeTeam" 
-                    value={editData.homeTeam || ''} 
-                    onChange={handleEditInputChange} 
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    name="awayTeam" 
-                    value={editData.awayTeam || ''} 
-                    onChange={handleEditInputChange} 
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    name="league" 
-                    value={editData.league || ''} 
-                    onChange={handleEditInputChange} 
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    name="startTime" 
-                    type="datetime-local" 
-                    value={editData.startTime || ''} 
-                    onChange={handleEditInputChange} 
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Switch 
-                        checked={editData.isLive || false} 
-                        onCheckedChange={(checked) => handleEditSwitchChange('isLive', checked)} 
-                      />
-                      <span>Live</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch 
-                        checked={editData.featured || false}
-                        onCheckedChange={(checked) => handleEditSwitchChange('featured', checked)} 
-                      />
-                      <span>Featured</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm" onClick={handleSaveEdit} className="mr-2">
-                    Save
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setEditMode(null)}>
-                    Cancel
-                  </Button>
-                </TableCell>
-              </>
+              <EditEventForm
+                editData={editData}
+                onInputChange={handleEditInputChange}
+                onSwitchChange={handleEditSwitchChange}
+                onSave={handleSaveEdit}
+                onCancel={() => setEditMode(null)}
+              />
             ) : (
               <>
                 <TableCell>{event.homeTeam}</TableCell>
@@ -236,18 +184,13 @@ export default function EventsList({ events, loading, onEventUpdated }: EventsLi
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEditEvent(event)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedEvent(event.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDeleteEvent(event.id)}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <TableCell>
+                  <EventActions
+                    event={event}
+                    onEdit={handleEditEvent}
+                    onView={(id) => setSelectedEvent(id)}
+                    onDelete={handleDeleteEvent}
+                  />
                 </TableCell>
               </>
             )}
