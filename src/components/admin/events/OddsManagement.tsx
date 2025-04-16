@@ -51,19 +51,43 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
       if (error) throw error;
 
       if (oddsData && oddsData.length > 0) {
-        const newOdds = { ...oddsData };
+        const newOddsData: OddsData = {
+          homeOdds: "1.90",
+          drawOdds: "3.50",
+          awayOdds: "4.20",
+          bttsYes: "1.80",
+          bttsNo: "2.00",
+          over25: "1.95",
+          under25: "1.85"
+        };
 
         for (const odd of oddsData) {
-          if (odd.selection === 'Home') newOdds.homeOdds = odd.value.toString();
-          else if (odd.selection === 'Draw') newOdds.drawOdds = odd.value.toString();
-          else if (odd.selection === 'Away') newOdds.awayOdds = odd.value.toString();
-          else if (odd.selection === 'Yes') newOdds.bttsYes = odd.value.toString();
-          else if (odd.selection === 'No') newOdds.bttsNo = odd.value.toString();
-          else if (odd.selection === 'Over') newOdds.over25 = odd.value.toString();
-          else if (odd.selection === 'Under') newOdds.under25 = odd.value.toString();
+          switch (odd.selection) {
+            case 'Home':
+              newOddsData.homeOdds = odd.value.toString();
+              break;
+            case 'Draw':
+              newOddsData.drawOdds = odd.value.toString();
+              break;
+            case 'Away':
+              newOddsData.awayOdds = odd.value.toString();
+              break;
+            case 'Yes':
+              newOddsData.bttsYes = odd.value.toString();
+              break;
+            case 'No':
+              newOddsData.bttsNo = odd.value.toString();
+              break;
+            case 'Over':
+              newOddsData.over25 = odd.value.toString();
+              break;
+            case 'Under':
+              newOddsData.under25 = odd.value.toString();
+              break;
+          }
         }
 
-        setOddsData(newOdds as OddsData);
+        setOddsData(newOddsData);
       }
     } catch (error) {
       console.error('Error loading odds:', error);

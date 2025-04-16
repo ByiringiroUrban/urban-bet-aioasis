@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { SportEvent, Market } from './database/types';
 
@@ -86,7 +85,9 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
         is_live,
         featured,
         sport_id,
-        sports(name)
+        sports!inner (
+          name
+        )
       `)
       .order('start_time', { ascending: true });
     
@@ -112,7 +113,7 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
       country: event.country || '',
       time: new Date(event.start_time).toLocaleTimeString(),
       date: new Date(event.start_time).toLocaleDateString(),
-      homeOdds: 1.5, // Will be updated with actual odds
+      homeOdds: 1.5,
       drawOdds: 3.5,
       awayOdds: 5.0,
       isLive: event.is_live || false,
