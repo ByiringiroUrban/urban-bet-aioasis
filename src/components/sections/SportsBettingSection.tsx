@@ -32,7 +32,22 @@ export default function SportsBettingSection({ upcomingMatches: propMatches }: S
       setLoading(true);
       try {
         const featuredEvents = await getFeaturedEvents();
-        setUpcomingMatches(featuredEvents);
+        // Convert SportEvent[] to Match[] with proper type casting
+        const matches: Match[] = featuredEvents.map(event => ({
+          id: event.id,
+          homeTeam: event.homeTeam,
+          awayTeam: event.awayTeam,
+          league: event.league,
+          country: event.country || '',
+          time: event.time,
+          date: event.date,
+          homeOdds: event.homeOdds,
+          drawOdds: event.drawOdds,
+          awayOdds: event.awayOdds,
+          isLive: event.isLive,
+          featured: event.featured
+        }));
+        setUpcomingMatches(matches);
       } catch (error) {
         console.error("Error loading featured events:", error);
       } finally {

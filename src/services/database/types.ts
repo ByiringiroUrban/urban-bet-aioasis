@@ -53,9 +53,11 @@ export interface SportEvent {
   drawOdds?: number;
   awayOdds: number;
   isLive?: boolean;
-  sportId?: string; // Added missing property
-  country?: string; // Added missing property
-  startTime?: string; // Added missing property
+  sportId?: string;
+  country?: string;
+  startTime?: string;
+  featured?: boolean;
+  sportName?: string;
 }
 
 export interface Market {

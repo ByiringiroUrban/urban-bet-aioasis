@@ -4,13 +4,16 @@ export interface Match {
   homeTeam: string;
   awayTeam: string;
   league: string;
-  country: string;
+  country?: string;  // Changed from required to optional
   time: string;
   date: string;
   homeOdds: number;
-  drawOdds?: number; // Make this optional since not all sports have draws
+  drawOdds?: number; // Optional since not all sports have draws
   awayOdds: number;
   isLive?: boolean;
+  featured?: boolean;
+  sportId?: string;
+  startTime?: string;
 }
 
 export interface CasinoGame {

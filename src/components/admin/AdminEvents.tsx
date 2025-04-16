@@ -521,19 +521,32 @@ export default function AdminEvents() {
         if (error) throw error;
         
         if (oddsData && oddsData.length > 0) {
-          const newOddsData = { ...oddsData };
+          // Create a new object to hold our odds values
+          const newOddsValues = { ...oddsData };
           
+          // Initialize with default values
+          const newOdds = {
+            homeOdds: "1.90",
+            drawOdds: "3.50",
+            awayOdds: "4.20",
+            bttsYes: "1.80",
+            bttsNo: "2.00",
+            over25: "1.95",
+            under25: "1.85"
+          };
+          
+          // Update with actual values from database
           for (const odd of oddsData) {
-            if (odd.selection === 'Home') newOddsData.homeOdds = odd.value;
-            else if (odd.selection === 'Draw') newOddsData.drawOdds = odd.value;
-            else if (odd.selection === 'Away') newOddsData.awayOdds = odd.value;
-            else if (odd.selection === 'Yes') newOddsData.bttsYes = odd.value;
-            else if (odd.selection === 'No') newOddsData.bttsNo = odd.value;
-            else if (odd.selection === 'Over') newOddsData.over25 = odd.value;
-            else if (odd.selection === 'Under') newOddsData.under25 = odd.value;
+            if (odd.selection === 'Home') newOdds.homeOdds = odd.value.toString();
+            else if (odd.selection === 'Draw') newOdds.drawOdds = odd.value.toString();
+            else if (odd.selection === 'Away') newOdds.awayOdds = odd.value.toString();
+            else if (odd.selection === 'Yes') newOdds.bttsYes = odd.value.toString();
+            else if (odd.selection === 'No') newOdds.bttsNo = odd.value.toString();
+            else if (odd.selection === 'Over') newOdds.over25 = odd.value.toString();
+            else if (odd.selection === 'Under') newOdds.under25 = odd.value.toString();
           }
           
-          setOddsData(newOddsData);
+          setOddsData(newOdds);
         }
       } catch (error) {
         console.error('Error loading odds:', error);
@@ -773,7 +786,7 @@ export default function AdminEvents() {
                     </TableCell>
                   </TableRow>
                 ) : events.length > 0 ? (
-                  events.map(event => (
+                  events.map((event) => (
                     <React.Fragment key={event.id}>
                       <TableRow>
                         {editMode === event.id ? (
