@@ -84,7 +84,6 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
         country,
         start_time,
         is_live,
-        featured,
         sport_id,
         sports (
           name
@@ -96,9 +95,7 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
       query = query.eq('sport_id', sportId);
     }
     
-    if (featured) {
-      query = query.eq('featured', true);
-    }
+    // Remove featured filter since the column doesn't exist
     
     const { data, error } = await query;
     
@@ -119,7 +116,7 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
       sportId: event.sport_id,
       sportName: event.sports ? (event.sports as any).name : '',
       startTime: event.start_time,
-      featured: event.featured || false
+      featured: false // Default value since the column doesn't exist
     }));
     
     for (const event of events) {
@@ -150,9 +147,10 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
   }
 };
 
-// Get featured events for homepage
+// Get featured events for homepage - now just returns latest events
 export const getFeaturedEvents = async (): Promise<SportEvent[]> => {
-  return getEvents(undefined, true);
+  const events = await getEvents();
+  return events.slice(0, 4); // Return the first 4 events
 };
 
 // Get all odds for an event

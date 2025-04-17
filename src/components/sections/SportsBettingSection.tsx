@@ -5,7 +5,7 @@ import UpcomingMatchCard from "@/components/UpcomingMatchCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getFeaturedEvents } from "@/services/sportsDataService";
+import { getEvents } from "@/services/sportsDataService";
 
 interface SportsBettingSectionProps {
   upcomingMatches?: Match[];
@@ -31,9 +31,11 @@ export default function SportsBettingSection({ upcomingMatches: propMatches }: S
     const loadFeaturedMatches = async () => {
       setLoading(true);
       try {
-        const featuredEvents = await getFeaturedEvents();
+        // Instead of using getFeaturedEvents which relies on the 'featured' column,
+        // we'll just get the latest events
+        const events = await getEvents(undefined, false);
         // Convert SportEvent[] to Match[] with proper type casting
-        const matches: Match[] = featuredEvents.map(event => ({
+        const matches: Match[] = events.slice(0, 4).map(event => ({
           id: event.id,
           homeTeam: event.homeTeam,
           awayTeam: event.awayTeam,
@@ -45,11 +47,11 @@ export default function SportsBettingSection({ upcomingMatches: propMatches }: S
           drawOdds: event.drawOdds,
           awayOdds: event.awayOdds,
           isLive: event.isLive,
-          featured: event.featured
+          featured: false // Default since column doesn't exist
         }));
         setUpcomingMatches(matches);
       } catch (error) {
-        console.error("Error loading featured events:", error);
+        console.error("Error loading events:", error);
       } finally {
         setLoading(false);
       }
@@ -97,7 +99,7 @@ export default function SportsBettingSection({ upcomingMatches: propMatches }: S
           </div>
         ) : (
           <div className="text-center py-10 bg-muted/20 rounded-lg">
-            <p className="text-muted-foreground">No featured matches available at the moment</p>
+            <p className="text-muted-foreground">No matches available at the moment</p>
             <Button variant="link" onClick={() => navigate("/sports")}>
               Browse all sports
             </Button>

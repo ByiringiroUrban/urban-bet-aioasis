@@ -22,7 +22,6 @@ interface FormData {
   country: string;
   startTime: string;
   isLive: boolean;
-  featured: boolean;
 }
 
 interface CreateEventFormProps {
@@ -39,8 +38,7 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
     league: "",
     country: "",
     startTime: "",
-    isLive: false,
-    featured: false
+    isLive: false
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,8 +140,8 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
         league: formData.league,
         country: formData.country,
         start_time: formData.startTime,
-        is_live: formData.isLive,
-        featured: formData.featured
+        is_live: formData.isLive
+        // Removed 'featured' field as it doesn't exist in the database
       };
 
       const { data, error } = await supabase
@@ -170,8 +168,7 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
         league: "",
         country: "",
         startTime: "",
-        isLive: false,
-        featured: false
+        isLive: false
       });
 
       await onEventCreated();
@@ -233,11 +230,8 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
             <Switch id="isLive" checked={formData.isLive} onCheckedChange={(checked) => handleSwitchChange('isLive', checked)} />
             <Label htmlFor="isLive">Live Event</Label>
           </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch id="featured" checked={formData.featured} onCheckedChange={(checked) => handleSwitchChange('featured', checked)} />
-            <Label htmlFor="featured">Featured on Homepage</Label>
-          </div>
+          
+          {/* Removed the 'Featured on Homepage' switch since the column doesn't exist */}
         </div>
       </div>
 

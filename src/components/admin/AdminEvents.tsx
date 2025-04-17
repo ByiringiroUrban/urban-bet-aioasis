@@ -48,11 +48,11 @@ export default function AdminEvents() {
         homeOdds: 1.5,
         drawOdds: 3.5,
         awayOdds: 5.0,
-        isLive: event.is_live ||false,
+        isLive: event.is_live || false,
         sportId: event.sport_id,
         country: event.country || '',
         startTime: event.start_time,
-        featured: event.featured || false
+        featured: false // Default value since the column doesn't exist
       }));
 
       setEvents(transformedEvents);
