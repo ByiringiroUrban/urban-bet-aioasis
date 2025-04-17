@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import FormSection from './form/FormSection';
+import SelectField from './form/SelectField';
+import EventSwitchField from './form/EventSwitchField';
+import { createDefaultMarketsAndOdds } from '@/services/eventMarketsService';
 
 interface Sport {
   id: string;
@@ -63,65 +65,6 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
     });
   };
 
-  const createDefaultMarketsAndOdds = async (eventId: string) => {
-    try {
-      // Create Match Winner market
-      const { data: matchWinnerMarket } = await supabase
-        .from('markets')
-        .insert([{
-          event_id: eventId,
-          name: 'Match Winner',
-          options: ['Home', 'Draw', 'Away']
-        }])
-        .select();
-
-      // Create BTTS market
-      const { data: bttsMarket } = await supabase
-        .from('markets')
-        .insert([{
-          event_id: eventId,
-          name: 'Both Teams to Score',
-          options: ['Yes', 'No']
-        }])
-        .select();
-
-      // Create Over/Under market
-      const { data: overUnderMarket } = await supabase
-        .from('markets')
-        .insert([{
-          event_id: eventId,
-          name: 'Over/Under 2.5 Goals',
-          options: ['Over', 'Under']
-        }])
-        .select();
-
-      if (matchWinnerMarket?.[0]?.id) {
-        await supabase.from('odds').insert([
-          { event_id: eventId, market_id: matchWinnerMarket[0].id, selection: 'Home', value: 1.90 },
-          { event_id: eventId, market_id: matchWinnerMarket[0].id, selection: 'Draw', value: 3.50 },
-          { event_id: eventId, market_id: matchWinnerMarket[0].id, selection: 'Away', value: 4.20 }
-        ]);
-      }
-
-      if (bttsMarket?.[0]?.id) {
-        await supabase.from('odds').insert([
-          { event_id: eventId, market_id: bttsMarket[0].id, selection: 'Yes', value: 1.80 },
-          { event_id: eventId, market_id: bttsMarket[0].id, selection: 'No', value: 2.00 }
-        ]);
-      }
-
-      if (overUnderMarket?.[0]?.id) {
-        await supabase.from('odds').insert([
-          { event_id: eventId, market_id: overUnderMarket[0].id, selection: 'Over', value: 1.95 },
-          { event_id: eventId, market_id: overUnderMarket[0].id, selection: 'Under', value: 1.85 }
-        ]);
-      }
-    } catch (error) {
-      console.error('Error creating markets and odds:', error);
-      throw error;
-    }
-  };
-
   const handleCreateEvent = async () => {
     try {
       if (!formData.homeTeam || !formData.awayTeam || !formData.startTime || !formData.sportId) {
@@ -141,7 +84,6 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
         country: formData.country,
         start_time: formData.startTime,
         is_live: formData.isLive
-        // Removed 'featured' field as it doesn't exist in the database
       };
 
       const { data, error } = await supabase
@@ -182,57 +124,85 @@ export default function CreateEventForm({ sports, onEventCreated }: CreateEventF
     }
   };
 
+  const switchOptions = [
+    {
+      name: 'isLive',
+      label: 'Live Event',
+      checked: formData.isLive,
+      onChange: (checked: boolean) => handleSwitchChange('isLive', checked)
+    }
+  ];
+
   return (
     <div className="bg-card border border-border rounded-lg p-6 mb-8">
       <h3 className="text-xl font-semibold mb-4">Create New Event</h3>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <SelectField
+          label="Sport"
+          name="sportId"
+          options={sports}
+          value={formData.sportId}
+          onChange={handleSelectChange}
+          required
+        />
+
         <div>
-          <Label htmlFor="sportId">Sport*</Label>
-          <Select value={formData.sportId} onValueChange={(value) => handleSelectChange('sportId', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Sport" />
-            </SelectTrigger>
-            <SelectContent>
-              {sports.map(sport => (
-                <SelectItem key={sport.id} value={sport.id}>{sport.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="homeTeam">Home Team<span className="text-destructive ml-1">*</span></Label>
+          <Input 
+            id="homeTeam" 
+            name="homeTeam" 
+            value={formData.homeTeam} 
+            onChange={handleInputChange} 
+            placeholder="Home Team" 
+          />
         </div>
 
         <div>
-          <Label htmlFor="homeTeam">Home Team*</Label>
-          <Input id="homeTeam" name="homeTeam" value={formData.homeTeam} onChange={handleInputChange} placeholder="Home Team" />
-        </div>
-
-        <div>
-          <Label htmlFor="awayTeam">Away Team*</Label>
-          <Input id="awayTeam" name="awayTeam" value={formData.awayTeam} onChange={handleInputChange} placeholder="Away Team" />
+          <Label htmlFor="awayTeam">Away Team<span className="text-destructive ml-1">*</span></Label>
+          <Input 
+            id="awayTeam" 
+            name="awayTeam" 
+            value={formData.awayTeam} 
+            onChange={handleInputChange} 
+            placeholder="Away Team" 
+          />
         </div>
 
         <div>
           <Label htmlFor="league">League</Label>
-          <Input id="league" name="league" value={formData.league} onChange={handleInputChange} placeholder="League" />
+          <Input 
+            id="league" 
+            name="league" 
+            value={formData.league} 
+            onChange={handleInputChange} 
+            placeholder="League" 
+          />
         </div>
 
         <div>
           <Label htmlFor="country">Country</Label>
-          <Input id="country" name="country" value={formData.country} onChange={handleInputChange} placeholder="Country" />
+          <Input 
+            id="country" 
+            name="country" 
+            value={formData.country} 
+            onChange={handleInputChange} 
+            placeholder="Country" 
+          />
         </div>
 
         <div>
-          <Label htmlFor="startTime">Start Time*</Label>
-          <Input id="startTime" name="startTime" type="datetime-local" value={formData.startTime} onChange={handleInputChange} />
+          <Label htmlFor="startTime">Start Time<span className="text-destructive ml-1">*</span></Label>
+          <Input 
+            id="startTime" 
+            name="startTime" 
+            type="datetime-local" 
+            value={formData.startTime} 
+            onChange={handleInputChange} 
+          />
         </div>
 
-        <div className="flex items-center space-x-8 mt-6">
-          <div className="flex items-center space-x-2">
-            <Switch id="isLive" checked={formData.isLive} onCheckedChange={(checked) => handleSwitchChange('isLive', checked)} />
-            <Label htmlFor="isLive">Live Event</Label>
-          </div>
-          
-          {/* Removed the 'Featured on Homepage' switch since the column doesn't exist */}
-        </div>
+        <EventSwitchField options={switchOptions} />
       </div>
 
       <Button className="mt-4" onClick={handleCreateEvent}>
