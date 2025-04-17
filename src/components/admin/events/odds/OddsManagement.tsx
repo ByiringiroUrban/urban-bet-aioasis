@@ -1,20 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Accordion } from "@/components/ui/accordion";
 import { SportEvent } from "@/services/database/types";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import OddsForm from './OddsForm';
-
-interface OddsData {
-  homeOdds: string;
-  drawOdds: string;
-  awayOdds: string;
-  bttsYes: string;
-  bttsNo: string;
-  over25: string;
-  under25: string;
-}
+import MarketOddsGroup from './MarketOddsGroup';
+import { OddsData, DEFAULT_ODDS_DATA, loadEventOdds, updateMarketOdds } from './oddsUtils';
 
 interface OddsManagementProps {
   event: SportEvent;
@@ -23,76 +15,17 @@ interface OddsManagementProps {
 }
 
 export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsManagementProps) {
-  const [oddsData, setOddsData] = useState<OddsData>({
-    homeOdds: "1.90",
-    drawOdds: "3.50",
-    awayOdds: "4.20",
-    bttsYes: "1.80",
-    bttsNo: "2.00",
-    over25: "1.95",
-    under25: "1.85"
-  });
-  
+  const [oddsData, setOddsData] = useState<OddsData>(DEFAULT_ODDS_DATA);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadEventOdds();
+    const fetchOdds = async () => {
+      const data = await loadEventOdds(event.id);
+      setOddsData(data);
+    };
+    
+    fetchOdds();
   }, [event.id]);
-
-  const loadEventOdds = async () => {
-    try {
-      const { data: oddsData, error } = await supabase
-        .from('odds')
-        .select('market_id, selection, value')
-        .eq('event_id', event.id);
-
-      if (error) throw error;
-
-      if (oddsData && oddsData.length > 0) {
-        // Create a new OddsData object with default values
-        const newOddsData: OddsData = {
-          homeOdds: "1.90",
-          drawOdds: "3.50",
-          awayOdds: "4.20",
-          bttsYes: "1.80",
-          bttsNo: "2.00",
-          over25: "1.95",
-          under25: "1.85"
-        };
-
-        // Loop through odds data and update the respective properties
-        for (const odd of oddsData) {
-          switch (odd.selection) {
-            case 'Home':
-              newOddsData.homeOdds = odd.value.toString();
-              break;
-            case 'Draw':
-              newOddsData.drawOdds = odd.value.toString();
-              break;
-            case 'Away':
-              newOddsData.awayOdds = odd.value.toString();
-              break;
-            case 'Yes':
-              newOddsData.bttsYes = odd.value.toString();
-              break;
-            case 'No':
-              newOddsData.bttsNo = odd.value.toString();
-              break;
-            case 'Over':
-              newOddsData.over25 = odd.value.toString();
-              break;
-            case 'Under':
-              newOddsData.under25 = odd.value.toString();
-              break;
-          }
-        }
-
-        setOddsData(newOddsData);
-      }
-    } catch (error) {
-      console.error('Error loading odds:', error);
-    }
-  };
 
   const handleOddsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -121,7 +54,7 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
 
       // Update Match Winner odds
       if (matchWinnerMarket) {
-        await updateOdds(event.id, matchWinnerMarket.id, [
+        await updateMarketOdds(event.id, matchWinnerMarket.id, [
           { selection: 'Home', value: parseFloat(oddsData.homeOdds) },
           { selection: 'Draw', value: parseFloat(oddsData.drawOdds) },
           { selection: 'Away', value: parseFloat(oddsData.awayOdds) }
@@ -130,7 +63,7 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
 
       // Update BTTS odds
       if (bttsMarket) {
-        await updateOdds(event.id, bttsMarket.id, [
+        await updateMarketOdds(event.id, bttsMarket.id, [
           { selection: 'Yes', value: parseFloat(oddsData.bttsYes) },
           { selection: 'No', value: parseFloat(oddsData.bttsNo) }
         ]);
@@ -138,7 +71,7 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
 
       // Update Over/Under odds
       if (overUnderMarket) {
-        await updateOdds(event.id, overUnderMarket.id, [
+        await updateMarketOdds(event.id, overUnderMarket.id, [
           { selection: 'Over', value: parseFloat(oddsData.over25) },
           { selection: 'Under', value: parseFloat(oddsData.under25) }
         ]);
@@ -161,31 +94,44 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
     }
   };
 
-  const updateOdds = async (eventId: string, marketId: string, odds: { selection: string; value: number }[]) => {
-    for (const odd of odds) {
-      await supabase
-        .from('odds')
-        .upsert({
-          event_id: eventId,
-          market_id: marketId,
-          selection: odd.selection,
-          value: odd.value
-        }, {
-          onConflict: 'event_id,market_id,selection',
-          ignoreDuplicates: false
-        });
-    }
-  };
+  const getMatchWinnerSelections = () => [
+    { name: 'homeOdds', label: `${event.homeTeam} (Home)`, value: oddsData.homeOdds },
+    { name: 'drawOdds', label: 'Draw', value: oddsData.drawOdds },
+    { name: 'awayOdds', label: `${event.awayTeam} (Away)`, value: oddsData.awayOdds }
+  ];
+
+  const getBTTSSelections = () => [
+    { name: 'bttsYes', label: 'Yes', value: oddsData.bttsYes },
+    { name: 'bttsNo', label: 'No', value: oddsData.bttsNo }
+  ];
+
+  const getOverUnderSelections = () => [
+    { name: 'over25', label: 'Over 2.5', value: oddsData.over25 },
+    { name: 'under25', label: 'Under 2.5', value: oddsData.under25 }
+  ];
 
   return (
     <div className="p-4">
       <h4 className="font-semibold mb-4">Manage Odds: {event.homeTeam} vs {event.awayTeam}</h4>
-      
-      <OddsForm 
-        event={event}
-        oddsData={oddsData}
-        onOddsInputChange={handleOddsInputChange}
-      />
+
+      <Accordion type="single" collapsible defaultValue="match-winner">
+        <MarketOddsGroup
+          title="Match Winner"
+          selections={getMatchWinnerSelections()}
+          onInputChange={handleOddsInputChange}
+          defaultOpen={true}
+        />
+        <MarketOddsGroup
+          title="Both Teams to Score"
+          selections={getBTTSSelections()}
+          onInputChange={handleOddsInputChange}
+        />
+        <MarketOddsGroup
+          title="Over/Under 2.5 Goals"
+          selections={getOverUnderSelections()}
+          onInputChange={handleOddsInputChange}
+        />
+      </Accordion>
 
       <div className="flex justify-end mt-4 gap-2">
         <Button variant="outline" onClick={onClose}>
