@@ -19,13 +19,16 @@ export default function FormField({
   type = 'text',
   onChange
 }: FormFieldProps) {
+  // Convert boolean values to strings for input value
+  const inputValue = typeof value === 'boolean' ? value.toString() : (value ?? '');
+  
   return (
     <TableCell>
       {label && <Label htmlFor={name}>{label}</Label>}
       <Input
         id={name}
         name={name}
-        value={value || ''}
+        value={inputValue}
         onChange={onChange}
         type={type}
       />
