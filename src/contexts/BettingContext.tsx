@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 import { isAuthenticated } from "@/utils/authUtils";
@@ -9,6 +8,9 @@ export interface BetItem {
   event: string;
   selection: string;
   odds: number;
+  eventId?: string;
+  matchName?: string;
+  marketName?: string;
 }
 
 interface BettingContextType {
@@ -21,6 +23,8 @@ interface BettingContextType {
   setCurrency: (currency: "USD" | "RWF") => void;
   exchangeRate: number;
   convertAmount: (amount: number, from: "USD" | "RWF", to: "USD" | "RWF") => number;
+  selections?: any[];
+  addToBetSlip?: (selection: any) => void;
 }
 
 // Global context instance for testing if we're already inside a provider
@@ -114,6 +118,16 @@ export const BettingProvider = ({ children, isRoot = false }: BettingProviderPro
     }
   };
 
+  const addToBetSlip = (selection: any) => {
+    addBet({
+      event: selection.matchName,
+      selection: `${selection.marketName}: ${selection.selection}`,
+      odds: selection.odds,
+      eventId: selection.eventId,
+      marketName: selection.marketName,
+    });
+  };
+
   const removeBet = (id: string) => {
     setBetItems((prev) => prev.filter((bet) => bet.id !== id));
     toast.info("Removed from betting slip");
@@ -168,6 +182,8 @@ export const BettingProvider = ({ children, isRoot = false }: BettingProviderPro
     <BettingContext.Provider value={{ 
       betItems, 
       addBet, 
+      addToBetSlip,
+      selections: betItems,
       removeBet, 
       clearBets, 
       placeBet,
@@ -205,6 +221,11 @@ export const useBetting = () => {
         console.warn("Betting functionality unavailable - addBet called outside BettingProvider");
         toast.error("Unable to add bet - please refresh the page");
       },
+      addToBetSlip: () => {
+        console.warn("Betting functionality unavailable - addToBetSlip called outside BettingProvider");
+        toast.error("Unable to add bet - please refresh the page");
+      },
+      selections: [],
       removeBet: () => {
         console.warn("Betting functionality unavailable - removeBet called outside BettingProvider");
       },

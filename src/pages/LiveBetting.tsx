@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -195,18 +194,7 @@ export default function LiveBetting() {
                 activeMatches.map((match) => (
                   <UpcomingMatchCard
                     key={match.id}
-                    id={match.id}
-                    homeTeam={match.homeTeam}
-                    awayTeam={match.awayTeam}
-                    league={match.league}
-                    time={match.time}
-                    date={match.date}
-                    homeOdds={match.homeOdds}
-                    drawOdds={match.drawOdds}
-                    awayOdds={match.awayOdds}
-                    isLive={match.isLive}
-                    isExpanded={expandedMatchId === match.id}
-                    onExpandMarket={handleExpandMarket}
+                    match={match}
                   />
                 ))
               ) : (

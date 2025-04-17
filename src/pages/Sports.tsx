@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Search, FilterIcon, ChevronRight, ChevronDown, CircleDot, Circle, User, Dribbble } from "lucide-react";
@@ -33,7 +32,6 @@ import UpcomingMatchCard from "@/components/UpcomingMatchCard";
 import { sportsCategories, SportCategory, Country, League } from "@/data/sportsData";
 import { isAuthenticated } from "@/utils/authUtils";
 
-// Define TypeScript interfaces for our data structure
 interface BaseMatch {
   id: string;
   homeTeam: string;
@@ -42,22 +40,20 @@ interface BaseMatch {
   time: string;
   date: string;
   homeOdds: number;
+  drawOdds?: number;
   awayOdds: number;
   isLive?: boolean;
   leagueId?: string;
 }
 
-// For sports that have draws (like football)
 interface MatchWithDraw extends BaseMatch {
   drawOdds: number;
 }
 
-// Type guard to check if a match has drawOdds
 function hasDrawOdds(match: BaseMatch): match is MatchWithDraw {
   return 'drawOdds' in match;
 }
 
-// Mock data for sports matches
 const sportsData: Record<string, (BaseMatch | MatchWithDraw)[]> = {
   football: [
     {
@@ -250,17 +246,13 @@ export default function Sports() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
-  // Validate sport parameter
   const validSport = Object.keys(sportsData).includes(sport) ? sport : "football";
   
-  // Find all matches for the current sport
   let matches = sportsData[validSport as keyof typeof sportsData] || [];
   
-  // Filter by league if provided
   if (league) {
     matches = matches.filter(match => (match as any).leagueId === league);
   }
-  // Filter by country if provided (check leagues in that country)
   else if (country) {
     const sportCategory = sportsCategories.find(sc => sc.id === validSport);
     if (sportCategory) {
@@ -272,7 +264,6 @@ export default function Sports() {
     }
   }
   
-  // Further filter matches based on search and view
   const filteredMatches = matches.filter(match => {
     const matchesSearch = 
       match.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -297,7 +288,6 @@ export default function Sports() {
 
   const getPageTitle = () => {
     if (league) {
-      // Find league name
       const sportCategory = sportsCategories.find(sc => sc.id === validSport);
       if (sportCategory) {
         for (const countryData of sportCategory.countries) {
@@ -311,7 +301,6 @@ export default function Sports() {
     }
     
     if (country) {
-      // Find country name
       const sportCategory = sportsCategories.find(sc => sc.id === validSport);
       if (sportCategory) {
         const countryData = sportCategory.countries.find(c => c.id === country);
@@ -322,7 +311,6 @@ export default function Sports() {
       return country.replace(/-/g, ' ');
     }
     
-    // Default to sport name
     const sportCategory = sportsCategories.find(sc => sc.id === validSport);
     return sportCategory ? sportCategory.name : validSport.replace(/-/g, ' ');
   };
@@ -360,7 +348,6 @@ export default function Sports() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <SidebarMenu>
-                        {/* All matches for this sport */}
                         <SidebarMenuItem key={`all-${category.id}`}>
                           <SidebarMenuButton 
                             asChild 
@@ -372,7 +359,6 @@ export default function Sports() {
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                         
-                        {/* Countries and leagues */}
                         {category.countries.map((countryData) => (
                           <Collapsible key={countryData.id}>
                             <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent hover:text-accent-foreground rounded-md text-sm">
@@ -381,7 +367,6 @@ export default function Sports() {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                               <div className="pl-2">
-                                {/* Link to all leagues in this country */}
                                 <SidebarMenuItem key={`country-${countryData.id}`}>
                                   <SidebarMenuButton 
                                     asChild 
@@ -393,7 +378,6 @@ export default function Sports() {
                                   </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 
-                                {/* Individual leagues */}
                                 {countryData.leagues.map((leagueData) => (
                                   <SidebarMenuItem key={leagueData.id}>
                                     <SidebarMenuButton 
@@ -420,7 +404,6 @@ export default function Sports() {
           
           <main className="flex-1 p-4">
             <div className="max-w-7xl mx-auto">
-              {/* Sports page content */}
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
@@ -434,7 +417,6 @@ export default function Sports() {
                 />
               </div>
               
-              {/* View Options */}
               <div className="bg-card rounded-lg p-4 mb-6 shadow-sm">
                 <div className="flex flex-col md:flex-row justify-between gap-4">
                   <div className="relative max-w-sm">
@@ -463,22 +445,23 @@ export default function Sports() {
                 </div>
               </div>
               
-              {/* Matches Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredMatches.length > 0 ? (
-                  filteredMatches.map((match, index) => (
+                  filteredMatches.map((event) => (
                     <UpcomingMatchCard
-                      key={match.id || `${validSport}-${index}`}
-                      id={match.id || `${validSport}-${index}`}
-                      homeTeam={match.homeTeam}
-                      awayTeam={match.awayTeam}
-                      league={match.league}
-                      time={match.time}
-                      date={match.date}
-                      homeOdds={match.homeOdds}
-                      drawOdds={hasDrawOdds(match) ? match.drawOdds : undefined}
-                      awayOdds={match.awayOdds}
-                      isLive={match.isLive}
+                      key={event.id}
+                      match={{
+                        id: event.id,
+                        homeTeam: event.homeTeam,
+                        awayTeam: event.awayTeam,
+                        league: event.league,
+                        time: event.time,
+                        date: event.date,
+                        homeOdds: event.homeOdds,
+                        drawOdds: event.drawOdds,
+                        awayOdds: event.awayOdds,
+                        isLive: event.isLive || false
+                      }}
                     />
                   ))
                 ) : (

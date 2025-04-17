@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { CalendarDays, Broadcast, ChevronRight, Trophy } from "lucide-react";
+import { CalendarDays, Trophy, ChevronRight } from "lucide-react";
 import { Match } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import OddsButton from "./betting/OddsButton";
@@ -13,7 +13,7 @@ interface UpcomingMatchCardProps {
 }
 
 const UpcomingMatchCard = ({ match }: UpcomingMatchCardProps) => {
-  const { addToBetSlip, selections } = useBetting();
+  const { betItems = [], addBet = () => {}, removeBet = () => {} } = useBetting();
   const [showMoreMarkets, setShowMoreMarkets] = useState(false);
   const [isLoadingMarkets, setIsLoadingMarkets] = useState(false);
   const [additionalMarkets, setAdditionalMarkets] = useState<any[]>([]);
@@ -55,23 +55,19 @@ const UpcomingMatchCard = ({ match }: UpcomingMatchCardProps) => {
   };
 
   const handleAddToBetSlip = (marketName: string, selection: string, odds: number) => {
-    addToBetSlip({
-      id: `${match.id}-${marketName}-${selection}`,
-      eventId: match.id,
-      matchName: `${match.homeTeam} vs ${match.awayTeam}`,
-      marketName,
-      selection,
+    addBet({
+      event: `${match.homeTeam} vs ${match.awayTeam}`,
+      selection: `${marketName}: ${selection}`,
       odds,
     });
   };
 
   const isSelectionActive = (marketName: string, selection: string) => {
     const selectionKey = `${marketName}: ${selection}`;
-    return selections.some(
+    return betItems.some(
       (s) => 
-        s.eventId === match.id && 
-        s.marketName === marketName && 
-        s.selection === selection
+        s.event === `${match.homeTeam} vs ${match.awayTeam}` && 
+        s.selection === selectionKey
     );
   };
 
@@ -85,9 +81,9 @@ const UpcomingMatchCard = ({ match }: UpcomingMatchCardProps) => {
     },
     {
       label: "Draw",
-      odds: match.drawOdds,
+      odds: match.drawOdds || 0,
       selected: isSelectionActive("Match Winner", "Draw"),
-      onClick: () => handleAddToBetSlip("Match Winner", "Draw", match.drawOdds),
+      onClick: () => handleAddToBetSlip("Match Winner", "Draw", match.drawOdds || 0),
     },
     {
       label: "Away",
@@ -108,10 +104,8 @@ const UpcomingMatchCard = ({ match }: UpcomingMatchCardProps) => {
     handleAddToBetSlip(marketName, option.label, option.odds);
   };
 
-  const selectedOdds = selections.find((s) => s.eventId === match.id)
-    ? `${selections.find((s) => s.eventId === match.id)?.marketName}: ${
-        selections.find((s) => s.eventId === match.id)?.selection
-      }`
+  const selectedOdds = betItems.find((s) => s.event === `${match.homeTeam} vs ${match.awayTeam}`)
+    ? betItems.find((s) => s.event === `${match.homeTeam} vs ${match.awayTeam}`)?.selection
     : null;
 
   return (
@@ -128,7 +122,7 @@ const UpcomingMatchCard = ({ match }: UpcomingMatchCardProps) => {
           <div className="flex items-center">
             {match.isLive && (
               <Badge variant="destructive" className="flex items-center mr-2">
-                <Broadcast className="mr-1 h-3 w-3" />
+                <div className="mr-1 h-2 w-2 bg-white rounded-full animate-pulse"></div>
                 LIVE
               </Badge>
             )}
