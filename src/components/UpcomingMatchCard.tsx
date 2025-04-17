@@ -1,15 +1,17 @@
+
+import { useState, useEffect } from "react";
 import { Clock, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
 import { useBetting } from "@/contexts/BettingContext";
-import { cn } from "@/lib/utils";
-import { mongoService } from "@/services/mongoService";
 import { useToast } from "@/hooks/use-toast";
+import { mongoService } from "@/services/mongoService";
+import OddsButton from "@/components/betting/OddsButton";
+import MarketsList from "@/components/betting/MarketsList";
+import MatchCardFooter from "@/components/betting/MatchCardFooter";
 
 interface UpcomingMatchCardProps {
-  id: string; // Added id for unique identification
+  id: string;
   homeTeam: string;
   awayTeam: string;
   league: string;
@@ -55,7 +57,6 @@ export default function UpcomingMatchCard({
       odds
     });
     
-    // Highlight the selected odds
     setSelectedOdds(selection);
     
     toast({
@@ -116,39 +117,10 @@ export default function UpcomingMatchCard({
     }
   };
 
-  const OddsButton = ({ 
-    label, 
-    odds, 
-    onClick, 
-    disabled = false,
-    isSelected = false
-  }: { 
-    label: string; 
-    odds: number; 
-    onClick: () => void; 
-    disabled?: boolean;
-    isSelected?: boolean;
-  }) => (
-    <Button 
-      variant="outline" 
-      className={cn(
-        "flex flex-col items-center justify-center h-auto py-3 w-full transition-all duration-200",
-        isSelected ? "border-bet-primary bg-bet-primary/10 text-bet-primary" : "border-border",
-        disabled ? "opacity-50 cursor-not-allowed" : 
-        "hover:border-bet-primary hover:bg-bet-primary/5 hover:text-bet-primary active:scale-95"
-      )}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      <span className="text-xs text-muted-foreground mb-1">{label}</span>
-      <span className={cn(
-        "font-bold text-lg",
-        isSelected ? "text-bet-primary" : ""
-      )}>
-        {odds.toFixed(2)}
-      </span>
-    </Button>
-  );
+  const handleMarketSelection = (marketName: string, option: { label: string, odds: number }) => {
+    const selectionKey = `${marketName}: ${option.label}`;
+    addToBettingSlip(selectionKey, option.odds);
+  };
 
   return (
     <Card className="card-highlight transition-all duration-300 bg-card border-border/50 hover:shadow-md overflow-hidden">
@@ -208,52 +180,21 @@ export default function UpcomingMatchCard({
 
         {showMoreMarkets && (
           <div className="mt-4 space-y-4 border-t border-border/50 pt-4">
-            {markets.length > 0 ? (
-              markets.map((market) => (
-                <div key={market.id} className="space-y-2">
-                  <h4 className="text-sm font-medium">{market.name}</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {market.options.map((option: {label: string, odds: number}, index: number) => {
-                      const selectionKey = `${market.name}: ${option.label}`;
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            "text-xs",
-                            selectedOdds === selectionKey 
-                              ? "border-bet-primary bg-bet-primary/10 text-bet-primary" 
-                              : "hover:border-bet-primary hover:bg-bet-primary/5"
-                          )}
-                          onClick={() => addToBettingSlip(selectionKey, option.odds)}
-                        >
-                          {option.label} <span className="ml-1 text-bet-primary">{option.odds.toFixed(2)}</span>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-2">
-                <p className="text-sm text-muted-foreground">Loading markets...</p>
-              </div>
-            )}
+            <MarketsList 
+              markets={markets}
+              selectedOdds={selectedOdds}
+              onSelectOption={handleMarketSelection}
+              isLoading={isLoadingMarkets}
+            />
           </div>
         )}
       </CardContent>
       <CardFooter>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full text-xs group"
-          onClick={handleShowMoreMarkets}
-          disabled={isLoadingMarkets}
-        >
-          {showMoreMarkets ? "Hide Markets" : (isLoadingMarkets ? "Loading..." : "More Markets")} 
-          <ArrowRight size={14} className={`ml-1 ${showMoreMarkets ? "rotate-90" : ""} group-hover:translate-x-1 transition-transform`} />
-        </Button>
+        <MatchCardFooter 
+          showMoreMarkets={showMoreMarkets}
+          onToggleMarkets={handleShowMoreMarkets}
+          isLoadingMarkets={isLoadingMarkets}
+        />
       </CardFooter>
     </Card>
   );
