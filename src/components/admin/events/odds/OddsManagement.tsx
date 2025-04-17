@@ -1,10 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { SportEvent } from "@/services/database/types";
 import { useToast } from "@/hooks/use-toast";
+import { SportEvent } from "@/services/database/types";
 import { supabase } from "@/lib/supabase";
 import OddsForm from './OddsForm';
+
+interface OddsData {
+  homeOdds: string;
+  drawOdds: string;
+  awayOdds: string;
+  bttsYes: string;
+  bttsNo: string;
+  over25: string;
+  under25: string;
+}
 
 interface OddsManagementProps {
   event: SportEvent;
@@ -13,7 +23,7 @@ interface OddsManagementProps {
 }
 
 export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsManagementProps) {
-  const [oddsData, setOddsData] = useState({
+  const [oddsData, setOddsData] = useState<OddsData>({
     homeOdds: "1.90",
     drawOdds: "3.50",
     awayOdds: "4.20",
@@ -39,17 +49,41 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
       if (error) throw error;
 
       if (oddsData && oddsData.length > 0) {
-        const newOddsData = { ...oddsData };
-        
+        // Create a new OddsData object with default values
+        const newOddsData: OddsData = {
+          homeOdds: "1.90",
+          drawOdds: "3.50",
+          awayOdds: "4.20",
+          bttsYes: "1.80",
+          bttsNo: "2.00",
+          over25: "1.95",
+          under25: "1.85"
+        };
+
+        // Loop through odds data and update the respective properties
         for (const odd of oddsData) {
           switch (odd.selection) {
-            case 'Home': newOddsData.homeOdds = odd.value.toString(); break;
-            case 'Draw': newOddsData.drawOdds = odd.value.toString(); break;
-            case 'Away': newOddsData.awayOdds = odd.value.toString(); break;
-            case 'Yes': newOddsData.bttsYes = odd.value.toString(); break;
-            case 'No': newOddsData.bttsNo = odd.value.toString(); break;
-            case 'Over': newOddsData.over25 = odd.value.toString(); break;
-            case 'Under': newOddsData.under25 = odd.value.toString(); break;
+            case 'Home':
+              newOddsData.homeOdds = odd.value.toString();
+              break;
+            case 'Draw':
+              newOddsData.drawOdds = odd.value.toString();
+              break;
+            case 'Away':
+              newOddsData.awayOdds = odd.value.toString();
+              break;
+            case 'Yes':
+              newOddsData.bttsYes = odd.value.toString();
+              break;
+            case 'No':
+              newOddsData.bttsNo = odd.value.toString();
+              break;
+            case 'Over':
+              newOddsData.over25 = odd.value.toString();
+              break;
+            case 'Under':
+              newOddsData.under25 = odd.value.toString();
+              break;
           }
         }
 
@@ -85,21 +119,30 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
       const bttsMarket = markets.find(m => m.name === 'Both Teams to Score');
       const overUnderMarket = markets.find(m => m.name === 'Over/Under 2.5 Goals');
 
-      await updateMarketOdds(event.id, matchWinnerMarket?.id, [
-        { selection: 'Home', value: parseFloat(oddsData.homeOdds) },
-        { selection: 'Draw', value: parseFloat(oddsData.drawOdds) },
-        { selection: 'Away', value: parseFloat(oddsData.awayOdds) }
-      ]);
+      // Update Match Winner odds
+      if (matchWinnerMarket) {
+        await updateOdds(event.id, matchWinnerMarket.id, [
+          { selection: 'Home', value: parseFloat(oddsData.homeOdds) },
+          { selection: 'Draw', value: parseFloat(oddsData.drawOdds) },
+          { selection: 'Away', value: parseFloat(oddsData.awayOdds) }
+        ]);
+      }
 
-      await updateMarketOdds(event.id, bttsMarket?.id, [
-        { selection: 'Yes', value: parseFloat(oddsData.bttsYes) },
-        { selection: 'No', value: parseFloat(oddsData.bttsNo) }
-      ]);
+      // Update BTTS odds
+      if (bttsMarket) {
+        await updateOdds(event.id, bttsMarket.id, [
+          { selection: 'Yes', value: parseFloat(oddsData.bttsYes) },
+          { selection: 'No', value: parseFloat(oddsData.bttsNo) }
+        ]);
+      }
 
-      await updateMarketOdds(event.id, overUnderMarket?.id, [
-        { selection: 'Over', value: parseFloat(oddsData.over25) },
-        { selection: 'Under', value: parseFloat(oddsData.under25) }
-      ]);
+      // Update Over/Under odds
+      if (overUnderMarket) {
+        await updateOdds(event.id, overUnderMarket.id, [
+          { selection: 'Over', value: parseFloat(oddsData.over25) },
+          { selection: 'Under', value: parseFloat(oddsData.under25) }
+        ]);
+      }
 
       toast({
         title: "Success",
@@ -118,9 +161,7 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
     }
   };
 
-  const updateMarketOdds = async (eventId: string, marketId: string | undefined, odds: { selection: string; value: number }[]) => {
-    if (!marketId) return;
-
+  const updateOdds = async (eventId: string, marketId: string, odds: { selection: string; value: number }[]) => {
     for (const odd of odds) {
       await supabase
         .from('odds')
@@ -130,7 +171,8 @@ export default function OddsManagement({ event, onClose, onOddsUpdated }: OddsMa
           selection: odd.selection,
           value: odd.value
         }, {
-          onConflict: 'event_id,market_id,selection'
+          onConflict: 'event_id,market_id,selection',
+          ignoreDuplicates: false
         });
     }
   };

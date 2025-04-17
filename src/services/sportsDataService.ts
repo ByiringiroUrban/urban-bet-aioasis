@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { SportEvent, Market } from './database/types';
 
@@ -116,7 +117,7 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
       awayOdds: 5.0,
       isLive: event.is_live || false,
       sportId: event.sport_id,
-      sportName: event.sports ? event.sports.name : '',
+      sportName: event.sports ? (event.sports as any).name : '',
       startTime: event.start_time,
       featured: event.featured || false
     }));
