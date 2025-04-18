@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
-import { sportsData, sportsCategories } from "@/data/sportsData";
+import { sportsCategories } from "@/data/sportsData";
+import { sportsData } from "@/data/mockSportsData";
 import Layout from "@/components/Layout";
 import SportsSidebar from "@/components/sports/SportsSidebar";
 import SportsContent from "@/components/sports/SportsContent";
