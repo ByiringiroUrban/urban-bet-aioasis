@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
-import { TableCell, TableRow } from "@/components/ui/table";
+import { TableRow } from "@/components/ui/table";
 import { SportEvent } from "@/services/database/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import OddsManagement from './OddsManagement';
-import EventActions from './EventActions';
 import EditEventForm from './EditEventForm';
+import EventsTableLoading from './components/EventsTableLoading';
+import EventsTableEmpty from './components/EventsTableEmpty';
+import EventDetailsRow from './components/EventDetailsRow';
 
 interface EventsListProps {
   events: SportEvent[];
@@ -131,25 +132,8 @@ export default function EventsList({ events, loading, onEventUpdated }: EventsLi
     }
   };
 
-  if (loading) {
-    return (
-      <TableRow>
-        <TableCell colSpan={6} className="text-center py-8">
-          <div className="flex justify-center">
-            <div className="w-6 h-6 border-2 border-bet-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-  if (events.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={6} className="text-center py-6">No events found</TableCell>
-      </TableRow>
-    );
-  }
+  if (loading) return <EventsTableLoading />;
+  if (events.length === 0) return <EventsTableEmpty />;
 
   return (
     <>
@@ -165,34 +149,12 @@ export default function EventsList({ events, loading, onEventUpdated }: EventsLi
                 onCancel={() => setEditMode(null)}
               />
             ) : (
-              <>
-                <TableCell>{event.homeTeam}</TableCell>
-                <TableCell>{event.awayTeam}</TableCell>
-                <TableCell>{event.league}</TableCell>
-                <TableCell>{`${event.date} ${event.time}`}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    {event.isLive && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                        Live
-                      </span>
-                    )}
-                    {event.featured && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                        Featured
-                      </span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <EventActions
-                    event={event}
-                    onEdit={handleEditEvent}
-                    onView={(id) => setSelectedEvent(id)}
-                    onDelete={handleDeleteEvent}
-                  />
-                </TableCell>
-              </>
+              <EventDetailsRow
+                event={event}
+                onEdit={handleEditEvent}
+                onView={(id) => setSelectedEvent(id)}
+                onDelete={handleDeleteEvent}
+              />
             )}
           </TableRow>
           {selectedEvent === event.id && (
