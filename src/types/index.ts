@@ -39,7 +39,7 @@ export interface AIInsight {
   confidence: number;
   analysis: string;
   date: string;
-  odds?: string;
+  odds: string; // Changed from optional to required
   trend?: string;
 }
 

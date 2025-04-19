@@ -11,13 +11,34 @@ interface BettingContextType {
   placeBet: (stake: number) => Promise<boolean>;
   isBetInSlip: (betId: string) => boolean;
   totalOdds: number;
+  // Add these missing properties
+  betItems: BetItem[];
+  clearBets: () => void;
+  currency: 'USD' | 'RWF';
+  setCurrency: (currency: 'USD' | 'RWF') => void;
+  convertAmount: (amount: number, from: 'USD' | 'RWF', to: 'USD' | 'RWF') => number;
 }
 
 const BettingContext = createContext<BettingContextType | undefined>(undefined);
 
 export const BettingProvider = ({ children }: { children: ReactNode }) => {
   const [betSlip, setBetSlip] = useState<BetItem[]>([]);
+  const [currency, setCurrency] = useState<'USD' | 'RWF'>('USD');
   const { toast } = useToast();
+  
+  // Convert between USD and RWF
+  const convertAmount = (amount: number, from: 'USD' | 'RWF', to: 'USD' | 'RWF'): number => {
+    // Using an exchange rate of 1 USD = 1200 RWF
+    const rate = 1200;
+    
+    if (from === 'USD' && to === 'RWF') {
+      return amount * rate;
+    } else if (from === 'RWF' && to === 'USD') {
+      return amount / rate;
+    }
+    
+    return amount; // Same currency, no conversion needed
+  };
   
   // Add a bet to the bet slip
   const addBet = (bet: Omit<BetItem, 'id'>) => {
@@ -73,6 +94,9 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
+  // Alias for clearBetSlip to maintain backward compatibility
+  const clearBets = clearBetSlip;
+  
   // Place the bet (mock implementation)
   const placeBet = async (stake: number): Promise<boolean> => {
     try {
@@ -87,7 +111,7 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
       
       toast({
         title: "Bet Placed Successfully",
-        description: `Your bet of $${stake.toFixed(2)} has been placed!`,
+        description: `Your bet of ${currency === 'USD' ? '$' : 'RWF '}${stake.toFixed(2)} has been placed!`,
       });
       
       return true;
@@ -122,6 +146,12 @@ export const BettingProvider = ({ children }: { children: ReactNode }) => {
         placeBet,
         isBetInSlip,
         totalOdds,
+        // Add the new properties to the context value
+        betItems: betSlip, // Alias for betSlip
+        clearBets, // Alias for clearBetSlip
+        currency,
+        setCurrency,
+        convertAmount,
       }}
     >
       {children}
