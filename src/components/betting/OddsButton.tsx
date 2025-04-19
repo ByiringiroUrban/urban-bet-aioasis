@@ -19,7 +19,7 @@ const OddsButton = ({
   isSelected = false,
 }: OddsButtonProps) => {
   // Add a safeguard against undefined odds
-  const displayOdds = typeof odds === 'number' ? odds.toFixed(2) : '0.00';
+  const displayOdds = typeof odds === 'number' && !isNaN(odds) ? odds.toFixed(2) : '0.00';
   
   return (
     <Button

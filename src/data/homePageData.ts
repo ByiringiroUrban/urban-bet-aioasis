@@ -1,28 +1,35 @@
+
 import { Match, CasinoGame, AIInsight } from "@/types";
 
 export const aiInsights: AIInsight[] = [
   {
+    id: "insight1",
     match: "Manchester United vs Liverpool",
     prediction: "Liverpool to win",
     confidence: 78,
     analysis: "Based on recent form, Liverpool has won 4 out of their last 5 matches, while Manchester United has struggled with consistency.",
     trend: "Liverpool has won the last 3 head-to-head matches",
-    odds: "1.95"
+    odds: "1.95",
+    date: "2025-04-15"
   },
   {
+    id: "insight2",
     match: "Lakers vs Warriors",
     prediction: "Over 220.5 points",
     confidence: 65,
     analysis: "Both teams have been scoring at a high rate in their recent games, with an average of 225 points in their last 5 meetings.",
     trend: "4 out of 5 recent games went over 220 points",
-    odds: "1.87"
+    odds: "1.87",
+    date: "2025-04-16"
   },
   {
+    id: "insight3",
     match: "Novak Djokovic vs Carlos Alcaraz",
     prediction: "Alcaraz to win",
     confidence: 55,
     analysis: "Alcaraz has shown excellent form on this surface, while Djokovic is returning from a minor injury.",
-    odds: "2.10"
+    odds: "2.10",
+    date: "2025-04-17"
   }
 ];
 
@@ -80,38 +87,63 @@ export const upcomingMatches: Match[] = [
 
 export const casinoGames: CasinoGame[] = [
   {
+    id: "game1",
+    name: "Aviator",
     title: "Aviator",
     imageSrc: "https://images.unsplash.com/photo-1436891620584-47fd0e565afb?q=80&w=1000&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1436891620584-47fd0e565afb?q=80&w=1000&auto=format&fit=crop",
     provider: "Urban Games",
     isNew: true,
+    new: true,
     isPopular: true,
-    category: "aviator"
+    popular: true,
+    category: "aviator",
+    description: "Experience the thrill of the most popular aviator game."
   },
   {
+    id: "game2",
+    name: "Fortune Tiger",
     title: "Fortune Tiger",
     imageSrc: "https://images.unsplash.com/photo-1606167668584-78701c57f13d?q=80&w=500&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1606167668584-78701c57f13d?q=80&w=500&auto=format&fit=crop",
     provider: "PG Soft",
     isNew: true,
-    category: "slots"
+    new: true,
+    category: "slots",
+    description: "Discover the mystery of the Fortune Tiger slot game."
   },
   {
+    id: "game3",
+    name: "Lightning Roulette",
     title: "Lightning Roulette",
     imageSrc: "https://images.unsplash.com/photo-1559582930-bb01987cf4dd?q=80&w=500&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1559582930-bb01987cf4dd?q=80&w=500&auto=format&fit=crop",
     provider: "Evolution",
     isPopular: true,
-    category: "table"
+    popular: true,
+    category: "table",
+    description: "Play the electrifying version of the classic roulette game."
   },
   {
+    id: "game4",
+    name: "Sweet Bonanza",
     title: "Sweet Bonanza",
     imageSrc: "https://images.unsplash.com/photo-1586899028174-e7098604235b?q=80&w=500&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1586899028174-e7098604235b?q=80&w=500&auto=format&fit=crop",
     provider: "Pragmatic Play",
     isPopular: true,
-    category: "slots"
+    popular: true,
+    category: "slots",
+    description: "Enjoy the sweet taste of winning in this candy-themed slot game."
   },
   {
+    id: "game5",
+    name: "Blackjack VIP",
     title: "Blackjack VIP",
     imageSrc: "https://images.unsplash.com/photo-1601370690183-1c7964158180?q=80&w=500&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1601370690183-1c7964158180?q=80&w=500&auto=format&fit=crop",
     provider: "Evolution",
-    category: "table"
+    category: "table",
+    description: "Experience premium blackjack with high stakes and exclusive features."
   }
 ];

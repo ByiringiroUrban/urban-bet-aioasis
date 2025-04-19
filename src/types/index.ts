@@ -25,6 +25,11 @@ export interface CasinoGame {
   popular?: boolean;
   new?: boolean;
   rtp?: number;
+  // Add these properties to support both naming conventions
+  title?: string;
+  imageSrc?: string;
+  isNew?: boolean;
+  isPopular?: boolean;
 }
 
 export interface AIInsight {
@@ -36,4 +41,11 @@ export interface AIInsight {
   date: string;
   odds?: string;
   trend?: string;
+}
+
+export interface BetItem {
+  id: string;
+  event: string;
+  selection: string;
+  odds: number;
 }

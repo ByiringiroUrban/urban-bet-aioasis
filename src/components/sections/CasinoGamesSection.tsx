@@ -30,11 +30,11 @@ export default function CasinoGamesSection({ casinoGames }: CasinoGamesSectionPr
           {casinoGames.map((game, index) => (
             <CasinoGameCard
               key={index}
-              title={game.title}
-              imageSrc={game.imageSrc}
+              title={game.title || game.name}
+              imageSrc={game.imageSrc || game.image}
               provider={game.provider}
-              isNew={game.isNew}
-              isPopular={game.isPopular}
+              isNew={game.isNew || game.new}
+              isPopular={game.isPopular || game.popular}
               category={game.category}
             />
           ))}

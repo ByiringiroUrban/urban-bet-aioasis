@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { Match } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Add Button import
 import OddsButton from "@/components/betting/OddsButton";
 import MatchCardFooter from "@/components/betting/MatchCardFooter";
 import MarketsList from "@/components/betting/MarketsList";
@@ -27,7 +28,7 @@ export default function UpcomingMatchCard({ match, className }: UpcomingMatchCar
   const handleSelectOdds = (selection: string, odds: number) => {
     if (!isBettingDisabled) {
       addBet({
-        id: `${match.id}-${selection}`,
+        // Remove explicit id from here as it's handled in the context
         event: `${match.homeTeam} vs ${match.awayTeam}`,
         selection: `Match Winner: ${selection}`,
         odds: odds
@@ -114,19 +115,11 @@ export default function UpcomingMatchCard({ match, className }: UpcomingMatchCar
           />
         )}
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full text-xs group"
-          onClick={() => setExpanded(!expanded)}
-          disabled={isLoadingMarkets}
-        >
-          {expanded ? "Hide Markets" : (isLoadingMarkets ? "Loading..." : "More Markets")}
-          <ChevronDown
-            size={14}
-            className={`ml-1 ${expanded ? "rotate-180" : ""} group-hover:translate-x-1 transition-transform`}
-          />
-        </Button>
+        <MatchCardFooter
+          showMoreMarkets={expanded}
+          onToggleMarkets={() => setExpanded(!expanded)}
+          isLoadingMarkets={isLoadingMarkets}
+        />
       </CardContent>
     </Card>
   );
