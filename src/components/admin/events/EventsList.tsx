@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { TableRow } from "@/components/ui/table";
+import { TableRow, TableCell } from "@/components/ui/table";
 import { SportEvent } from "@/services/database/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";

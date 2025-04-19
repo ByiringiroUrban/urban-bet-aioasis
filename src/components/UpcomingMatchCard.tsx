@@ -1,179 +1,129 @@
 
-import React, { useState } from "react";
-import { CalendarDays, Trophy, ChevronRight } from "lucide-react";
+import React, { useState } from 'react';
+import { Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { Match } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import OddsButton from "./betting/OddsButton";
-import MarketsList from "./betting/MarketsList";
-import MatchCardFooter from "./betting/MatchCardFooter";
-import { useBetting } from "@/contexts/BettingContext";
+import OddsButton from "@/components/betting/OddsButton";
+import MatchCardFooter from "@/components/betting/MatchCardFooter";
+import MarketsList from "@/components/betting/MarketsList";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { isEventExpired } from "@/services/sportsDataService";
 
 interface UpcomingMatchCardProps {
   match: Match;
+  className?: string;
 }
 
-const UpcomingMatchCard = ({ match }: UpcomingMatchCardProps) => {
-  const { betItems = [], addBet = () => {}, removeBet = () => {} } = useBetting();
-  const [showMoreMarkets, setShowMoreMarkets] = useState(false);
-  const [isLoadingMarkets, setIsLoadingMarkets] = useState(false);
-  const [additionalMarkets, setAdditionalMarkets] = useState<any[]>([]);
-
-  // Format the date and time for display
-  const matchDate = new Date(match.date);
-  const formattedTime = match.time;
-  const formattedDate = matchDate instanceof Date && !isNaN(matchDate.getTime()) 
-    ? matchDate.toLocaleDateString() 
-    : match.date;
-
-  const handleToggleMarkets = () => {
-    if (!showMoreMarkets && additionalMarkets.length === 0) {
-      setIsLoadingMarkets(true);
-      // Simulate loading markets
-      setTimeout(() => {
-        setAdditionalMarkets([
-          {
-            id: "1",
-            name: "Both Teams to Score",
-            options: [
-              { label: "Yes", odds: 1.86 },
-              { label: "No", odds: 1.95 },
-            ],
-          },
-          {
-            id: "2",
-            name: "Over/Under 2.5 Goals",
-            options: [
-              { label: "Over", odds: 1.89 },
-              { label: "Under", odds: 1.95 },
-            ],
-          },
-        ]);
-        setIsLoadingMarkets(false);
-      }, 500);
-    }
-    setShowMoreMarkets(!showMoreMarkets);
-  };
-
-  const handleAddToBetSlip = (marketName: string, selection: string, odds: number) => {
-    addBet({
-      event: `${match.homeTeam} vs ${match.awayTeam}`,
-      selection: `${marketName}: ${selection}`,
-      odds,
-    });
-  };
-
-  const isSelectionActive = (marketName: string, selection: string) => {
-    const selectionKey = `${marketName}: ${selection}`;
-    return betItems.some(
-      (s) => 
-        s.event === `${match.homeTeam} vs ${match.awayTeam}` && 
-        s.selection === selectionKey
-    );
-  };
-
-  // Main markets (Match Winner)
-  const mainMarkets = [
-    {
-      label: "Home",
-      odds: match.homeOdds,
-      selected: isSelectionActive("Match Winner", "Home"),
-      onClick: () => handleAddToBetSlip("Match Winner", "Home", match.homeOdds),
-    },
-    {
-      label: "Draw",
-      odds: match.drawOdds || 0,
-      selected: isSelectionActive("Match Winner", "Draw"),
-      onClick: () => handleAddToBetSlip("Match Winner", "Draw", match.drawOdds || 0),
-    },
-    {
-      label: "Away",
-      odds: match.awayOdds,
-      selected: isSelectionActive("Match Winner", "Away"),
-      onClick: () => handleAddToBetSlip("Match Winner", "Away", match.awayOdds),
-    },
-  ];
-
-  // Format markets for MarketsList component
-  const additionalMarketsFormatted = additionalMarkets.map((market) => ({
-    id: market.id,
-    name: market.name,
-    options: market.options,
-  }));
-
-  const handleSelectOption = (marketName: string, option: { label: string; odds: number }) => {
-    handleAddToBetSlip(marketName, option.label, option.odds);
-  };
-
-  const selectedOdds = betItems.find((s) => s.event === `${match.homeTeam} vs ${match.awayTeam}`)
-    ? betItems.find((s) => s.event === `${match.homeTeam} vs ${match.awayTeam}`)?.selection
-    : null;
-
+export default function UpcomingMatchCard({ match, className }: UpcomingMatchCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  
+  const isExpired = match.startTime ? isEventExpired(match.startTime) : false;
+  const isBettingDisabled = isExpired && !match.isLive;
+  
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
-      {/* Match header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center space-x-2">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              {formattedDate} • {formattedTime}
+    <Card className={cn("overflow-hidden", className)}>
+      <CardHeader className="p-4 bg-card border-b flex flex-row items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">{match.league}</p>
+          <div className="flex gap-2 items-center mt-1">
+            <span className="text-xs bg-muted px-2 py-0.5 rounded-sm">
+              {match.country}
             </span>
-          </div>
-          <div className="flex items-center">
-            {match.isLive && (
-              <Badge variant="destructive" className="flex items-center mr-2">
-                <div className="mr-1 h-2 w-2 bg-white rounded-full animate-pulse"></div>
-                LIVE
-              </Badge>
+            {match.isLive ? (
+              <Badge variant="destructive" className="text-xs py-0">Live</Badge>
+            ) : (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{match.date} {match.time}</span>
+              </div>
             )}
-            <Badge variant="outline" className="text-xs">
-              {match.league || "League"}
-            </Badge>
           </div>
         </div>
-
-        <h3 className="font-bold text-lg">
-          {match.homeTeam} vs {match.awayTeam}
-        </h3>
-      </div>
-
-      {/* Main betting options */}
-      <div className="p-4">
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          {mainMarkets.map((market, index) => (
-            <OddsButton
-              key={index}
-              label={market.label}
-              odds={market.odds}
-              onClick={market.onClick}
-              isSelected={market.selected}
-            />
-          ))}
-        </div>
-
-        {/* Additional markets */}
-        {showMoreMarkets && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <MarketsList
-              markets={additionalMarketsFormatted}
-              selectedOdds={selectedOdds}
-              onSelectOption={handleSelectOption}
-              isLoading={isLoadingMarkets}
-            />
+      </CardHeader>
+      
+      <CardContent className="p-0">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="font-medium">{match.homeTeam}</p>
+            {!isBettingDisabled && (
+              <OddsButton
+                value={match.homeOdds}
+                selection="Home"
+                event={{
+                  id: match.id,
+                  name: `${match.homeTeam} vs ${match.awayTeam}`
+                }}
+                market={{
+                  id: '1',
+                  name: 'Match Winner'
+                }}
+              />
+            )}
           </div>
+          
+          {match.drawOdds !== undefined && (
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-medium">Draw</p>
+              {!isBettingDisabled && (
+                <OddsButton
+                  value={match.drawOdds}
+                  selection="Draw"
+                  event={{
+                    id: match.id,
+                    name: `${match.homeTeam} vs ${match.awayTeam}`
+                  }}
+                  market={{
+                    id: '1',
+                    name: 'Match Winner'
+                  }}
+                />
+              )}
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between">
+            <p className="font-medium">{match.awayTeam}</p>
+            {!isBettingDisabled && (
+              <OddsButton
+                value={match.awayOdds}
+                selection="Away"
+                event={{
+                  id: match.id,
+                  name: `${match.homeTeam} vs ${match.awayTeam}`
+                }}
+                market={{
+                  id: '1',
+                  name: 'Match Winner'
+                }}
+              />
+            )}
+          </div>
+          
+          {isBettingDisabled && (
+            <div className="mt-2 text-center">
+              <Badge variant="outline" className="bg-muted/50">
+                Betting closed for this event
+              </Badge>
+            </div>
+          )}
+        </div>
+        
+        {expanded && (
+          <MarketsList 
+            eventId={match.id} 
+            eventName={`${match.homeTeam} vs ${match.awayTeam}`}
+            disabled={isBettingDisabled}
+          />
         )}
-      </div>
-
-      {/* Footer with "More Markets" button */}
-      <div className="px-4 pb-4">
-        <MatchCardFooter
-          showMoreMarkets={showMoreMarkets}
-          onToggleMarkets={handleToggleMarkets}
-          isLoadingMarkets={isLoadingMarkets}
+        
+        <MatchCardFooter 
+          expanded={expanded} 
+          onToggle={() => setExpanded(!expanded)} 
+          matchId={match.id}
+          disabled={isBettingDisabled}
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default UpcomingMatchCard;
+}

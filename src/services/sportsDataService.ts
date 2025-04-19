@@ -74,6 +74,9 @@ export const getMarkets = async (eventId?: string): Promise<Market[]> => {
 // Get events for sports section or homepage
 export const getEvents = async (sportId?: string, featured: boolean = false): Promise<SportEvent[]> => {
   try {
+    // Get current date
+    const now = new Date().toISOString();
+    
     let query = supabase
       .from('events')
       .select(`
@@ -89,13 +92,13 @@ export const getEvents = async (sportId?: string, featured: boolean = false): Pr
           name
         )
       `)
+      // Filter only upcoming events or currently live events
+      .or(`start_time.gt.${now},is_live.eq.true`)
       .order('start_time', { ascending: true });
     
     if (sportId) {
       query = query.eq('sport_id', sportId);
     }
-    
-    // Remove featured filter since the column doesn't exist
     
     const { data, error } = await query;
     
@@ -174,4 +177,13 @@ export const getOddsForEvent = async (eventId: string): Promise<any[]> => {
     console.error('Error fetching odds:', error);
     return [];
   }
+};
+
+// Check if an event is expired based on start time
+export const isEventExpired = (startTime: string): boolean => {
+  const eventDate = new Date(startTime);
+  const now = new Date();
+  
+  // For non-live events, consider them expired if more than 2 hours past start time
+  return eventDate < new Date(now.getTime() - 2 * 60 * 60 * 1000);
 };

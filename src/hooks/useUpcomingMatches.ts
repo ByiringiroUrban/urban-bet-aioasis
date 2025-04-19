@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Match } from "@/types";
 import { getEvents } from "@/services/sportsDataService";
@@ -8,6 +9,7 @@ interface UseUpcomingMatchesOptions {
   sportId?: string;
   leagueFilter?: string;
   timeFilter?: 'upcoming' | 'live' | 'all';
+  countryFilter?: string;
 }
 
 export const useUpcomingMatches = ({ 
@@ -15,14 +17,15 @@ export const useUpcomingMatches = ({
   limit = 4, 
   sportId, 
   leagueFilter,
-  timeFilter = 'all'
+  timeFilter = 'all',
+  countryFilter
 }: UseUpcomingMatchesOptions = {}) => {
   const [loading, setLoading] = useState(false);
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>(initialMatches || []);
   
   useEffect(() => {
     // If we have initial matches and no filters, use them
-    if (initialMatches && initialMatches.length > 0 && !sportId && !leagueFilter && timeFilter === 'all') {
+    if (initialMatches && initialMatches.length > 0 && !sportId && !leagueFilter && !countryFilter && timeFilter === 'all') {
       setUpcomingMatches(initialMatches);
       return;
     }
@@ -39,7 +42,14 @@ export const useUpcomingMatches = ({
         // Apply league filter if provided
         if (leagueFilter) {
           filteredEvents = filteredEvents.filter(event => 
-            event.league?.toLowerCase() === leagueFilter.toLowerCase()
+            event.league?.toLowerCase().includes(leagueFilter.toLowerCase())
+          );
+        }
+        
+        // Apply country filter if provided
+        if (countryFilter) {
+          filteredEvents = filteredEvents.filter(event => 
+            event.country?.toLowerCase().includes(countryFilter.toLowerCase())
           );
         }
         
@@ -47,7 +57,7 @@ export const useUpcomingMatches = ({
         if (timeFilter !== 'all') {
           const now = new Date();
           filteredEvents = filteredEvents.filter(event => {
-            const eventDate = new Date(event.startTime);
+            const eventDate = new Date(event.startTime || '');
             
             if (timeFilter === 'live') {
               return event.isLive;
@@ -71,6 +81,7 @@ export const useUpcomingMatches = ({
           drawOdds: event.drawOdds,
           awayOdds: event.awayOdds,
           isLive: event.isLive,
+          startTime: event.startTime,
           featured: !!event.featured
         }));
         
@@ -94,7 +105,7 @@ export const useUpcomingMatches = ({
     return () => {
       clearInterval(intervalId);
     };
-  }, [initialMatches, limit, sportId, leagueFilter, timeFilter]);
+  }, [initialMatches, limit, sportId, leagueFilter, timeFilter, countryFilter]);
 
   return { upcomingMatches, loading };
 };

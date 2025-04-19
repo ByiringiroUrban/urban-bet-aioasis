@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Search, Circle, CircleDot, Dribbble, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -51,6 +50,37 @@ export default function SportsSidebar({
   searchQuery,
   onSearchChange,
 }: SportsSidebarProps) {
+  const filteredCategories = searchQuery.trim() 
+    ? categories.map(category => {
+        const filteredCountries = category.countries.filter(country => 
+          country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          country.leagues.some(league => 
+            league.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        );
+        
+        if (filteredCountries.length > 0) {
+          return {
+            ...category,
+            countries: filteredCountries.map(country => ({
+              ...country,
+              leagues: searchQuery.length > 2 
+                ? country.leagues.filter(league => 
+                    league.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                : country.leagues
+            }))
+          };
+        }
+        
+        if (category.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return category;
+        }
+        
+        return null;
+      }).filter(Boolean) as SportCategory[]
+    : categories;
+
   return (
     <>
       <div className="p-4">
@@ -67,68 +97,74 @@ export default function SportsSidebar({
         </div>
       </div>
       
-      <Accordion type="multiple" defaultValue={[activeSport]}>
-        {categories.map((category) => (
-          <AccordionItem key={category.id} value={category.id}>
-            <AccordionTrigger className="py-2 px-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <SportIcon sportId={category.id} />
-                <span>{category.name}</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <SidebarMenu>
-                <SidebarMenuItem key={`all-${category.id}`}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={activeSport === category.id && !activeCountry && !activeLeague}
-                  >
-                    <Link to={`/sports/${category.id}`}>
-                      All {category.name}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                {category.countries.map((countryData) => (
-                  <Collapsible key={countryData.id}>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent hover:text-accent-foreground rounded-md text-sm">
-                      <span>{countryData.name}</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="pl-2">
-                        <SidebarMenuItem key={`country-${countryData.id}`}>
-                          <SidebarMenuButton 
-                            asChild 
-                            isActive={activeSport === category.id && activeCountry === countryData.id && !activeLeague}
-                          >
-                            <Link to={`/sports/${category.id}/${countryData.id}`}>
-                              All {countryData.name} Leagues
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        
-                        {countryData.leagues.map((leagueData) => (
-                          <SidebarMenuItem key={leagueData.id}>
+      {filteredCategories.length === 0 && searchQuery ? (
+        <div className="p-4 text-center text-muted-foreground">
+          No sports or leagues found
+        </div>
+      ) : (
+        <Accordion type="multiple" defaultValue={[activeSport]}>
+          {filteredCategories.map((category) => (
+            <AccordionItem key={category.id} value={category.id}>
+              <AccordionTrigger className="py-2 px-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <SportIcon sportId={category.id} />
+                  <span>{category.name}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <SidebarMenu>
+                  <SidebarMenuItem key={`all-${category.id}`}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={activeSport === category.id && !activeCountry && !activeLeague}
+                    >
+                      <Link to={`/sports/${category.id}`}>
+                        All {category.name}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  
+                  {category.countries.map((countryData) => (
+                    <Collapsible key={countryData.id}>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent hover:text-accent-foreground rounded-md text-sm">
+                        <span>{countryData.name}</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="pl-2">
+                          <SidebarMenuItem key={`country-${countryData.id}`}>
                             <SidebarMenuButton 
                               asChild 
-                              isActive={activeSport === category.id && activeLeague === leagueData.id}
+                              isActive={activeSport === category.id && activeCountry === countryData.id && !activeLeague}
                             >
-                              <Link to={`/sports/${category.id}/${countryData.id}/${leagueData.id}`}>
-                                {leagueData.name}
+                              <Link to={`/sports/${category.id}/${countryData.id}`}>
+                                All {countryData.name} Leagues
                               </Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
-              </SidebarMenu>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+                          
+                          {countryData.leagues.map((leagueData) => (
+                            <SidebarMenuItem key={leagueData.id}>
+                              <SidebarMenuButton 
+                                asChild 
+                                isActive={activeSport === category.id && activeLeague === leagueData.id}
+                              >
+                                <Link to={`/sports/${category.id}/${countryData.id}/${leagueData.id}`}>
+                                  {leagueData.name}
+                                </Link>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
+                </SidebarMenu>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      )}
     </>
   );
 }
