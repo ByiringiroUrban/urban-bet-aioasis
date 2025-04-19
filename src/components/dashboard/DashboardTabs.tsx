@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ActiveBets from "./ActiveBets";
 import BetHistory from "./BetHistory";
 import AIPredictionsTab from "./AIPredictionsTab";
-import { BetRecord } from "@/services/supabaseService";
+import { BetRecord } from "@/services/database/types";
 
 interface DashboardTabsProps {
   betHistory: BetRecord[];
@@ -32,7 +32,7 @@ const DashboardTabs = ({
         <BetHistory betHistory={betHistory} loading={loadingBets} />
       </TabsContent>
       <TabsContent value="predictions">
-        <AIPredictionsTab aiPredictions={aiPredictions} loading={loadingPredictions} />
+        <AIPredictionsTab aiPredictions={[]} loading={loadingPredictions} />
       </TabsContent>
     </Tabs>
   );

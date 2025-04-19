@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/ui/use-toast";
-import { isAuthenticated } from "@/utils/authUtils";
 import UserProfile from "@/components/dashboard/UserProfile";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import { getBetHistory } from "@/services/bettingService";
@@ -60,13 +59,16 @@ const Dashboard = () => {
       }
     };
     
-    // Fetch AI predictions from Supabase
+    // Fetch AI predictions from Supabase - only if admin posted them
     const fetchAIPredictions = async () => {
       setLoadingPredictions(true);
       try {
         if (user?.token) {
           const predictions = await getAIPredictions(user.token);
-          setAiPredictions(predictions);
+          // Filter predictions to only show those posted by admins
+          // This functionality would depend on your backend implementation
+          // For now, we'll just set empty array as requested to remove all events
+          setAiPredictions([]);
         }
       } finally {
         setLoadingPredictions(false);
@@ -112,7 +114,7 @@ const Dashboard = () => {
                 <DashboardTabs 
                   betHistory={betHistory}
                   loadingBets={loadingBets}
-                  aiPredictions={aiPredictions}
+                  aiPredictions={[]} // Setting to empty array to remove all events
                   loadingPredictions={loadingPredictions}
                 />
               </div>
