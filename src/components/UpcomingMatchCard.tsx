@@ -9,6 +9,7 @@ import MarketsList from "@/components/betting/MarketsList";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { isEventExpired } from "@/services/sportsDataService";
+import { useBetting } from "@/contexts/BettingContext";
 
 interface UpcomingMatchCardProps {
   match: Match;
@@ -17,9 +18,22 @@ interface UpcomingMatchCardProps {
 
 export default function UpcomingMatchCard({ match, className }: UpcomingMatchCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [isLoadingMarkets, setIsLoadingMarkets] = useState(false);
+  const { addBet } = useBetting();
   
   const isExpired = match.startTime ? isEventExpired(match.startTime) : false;
   const isBettingDisabled = isExpired && !match.isLive;
+  
+  const handleSelectOdds = (selection: string, odds: number) => {
+    if (!isBettingDisabled) {
+      addBet({
+        id: `${match.id}-${selection}`,
+        event: `${match.homeTeam} vs ${match.awayTeam}`,
+        selection: `Match Winner: ${selection}`,
+        odds: odds
+      });
+    }
+  };
   
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -48,16 +62,10 @@ export default function UpcomingMatchCard({ match, className }: UpcomingMatchCar
             <p className="font-medium">{match.homeTeam}</p>
             {!isBettingDisabled && (
               <OddsButton
-                value={match.homeOdds}
-                selection="Home"
-                event={{
-                  id: match.id,
-                  name: `${match.homeTeam} vs ${match.awayTeam}`
-                }}
-                market={{
-                  id: '1',
-                  name: 'Match Winner'
-                }}
+                label="Home"
+                odds={match.homeOdds}
+                onClick={() => handleSelectOdds('Home', match.homeOdds)}
+                disabled={isBettingDisabled}
               />
             )}
           </div>
@@ -67,16 +75,10 @@ export default function UpcomingMatchCard({ match, className }: UpcomingMatchCar
               <p className="font-medium">Draw</p>
               {!isBettingDisabled && (
                 <OddsButton
-                  value={match.drawOdds}
-                  selection="Draw"
-                  event={{
-                    id: match.id,
-                    name: `${match.homeTeam} vs ${match.awayTeam}`
-                  }}
-                  market={{
-                    id: '1',
-                    name: 'Match Winner'
-                  }}
+                  label="Draw"
+                  odds={match.drawOdds}
+                  onClick={() => handleSelectOdds('Draw', match.drawOdds)}
+                  disabled={isBettingDisabled}
                 />
               )}
             </div>
@@ -86,16 +88,10 @@ export default function UpcomingMatchCard({ match, className }: UpcomingMatchCar
             <p className="font-medium">{match.awayTeam}</p>
             {!isBettingDisabled && (
               <OddsButton
-                value={match.awayOdds}
-                selection="Away"
-                event={{
-                  id: match.id,
-                  name: `${match.homeTeam} vs ${match.awayTeam}`
-                }}
-                market={{
-                  id: '1',
-                  name: 'Match Winner'
-                }}
+                label="Away"
+                odds={match.awayOdds}
+                onClick={() => handleSelectOdds('Away', match.awayOdds)}
+                disabled={isBettingDisabled}
               />
             )}
           </div>
@@ -111,18 +107,26 @@ export default function UpcomingMatchCard({ match, className }: UpcomingMatchCar
         
         {expanded && (
           <MarketsList 
-            eventId={match.id} 
-            eventName={`${match.homeTeam} vs ${match.awayTeam}`}
-            disabled={isBettingDisabled}
+            markets={[]}
+            selectedOdds={null}
+            onSelectOption={() => {}}
+            isLoading={isLoadingMarkets}
           />
         )}
         
-        <MatchCardFooter 
-          expanded={expanded} 
-          onToggle={() => setExpanded(!expanded)} 
-          matchId={match.id}
-          disabled={isBettingDisabled}
-        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full text-xs group"
+          onClick={() => setExpanded(!expanded)}
+          disabled={isLoadingMarkets}
+        >
+          {expanded ? "Hide Markets" : (isLoadingMarkets ? "Loading..." : "More Markets")}
+          <ChevronDown
+            size={14}
+            className={`ml-1 ${expanded ? "rotate-180" : ""} group-hover:translate-x-1 transition-transform`}
+          />
+        </Button>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MatchCardFooterProps {
   showMoreMarkets: boolean;
@@ -23,9 +24,13 @@ const MatchCardFooter = ({
       disabled={isLoadingMarkets}
     >
       {showMoreMarkets ? "Hide Markets" : (isLoadingMarkets ? "Loading..." : "More Markets")}
-      <ArrowRight
+      <ChevronDown
         size={14}
-        className={`ml-1 ${showMoreMarkets ? "rotate-90" : ""} group-hover:translate-x-1 transition-transform`}
+        className={cn(
+          "ml-1 transition-transform",
+          showMoreMarkets ? "rotate-180" : "",
+          "group-hover:translate-x-1"
+        )}
       />
     </Button>
   );
